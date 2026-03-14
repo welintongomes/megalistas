@@ -868,9 +868,12 @@ function rTree(items,cont){
       <span class="itog ${hk?'':'nc'}" onclick="togCol('${item.id}')">${item.collapsed?'▶':'▼'}</span>
       <input type="checkbox" class="icb ${cbcls}" ${item.checked?'checked':''} onchange="togChk('${item.id}',this.checked)">
       <div class="ibody">
-        <div class="itext ${item.checked?'done':''}" contenteditable="true" spellcheck="false"
-          onblur="renItem('${item.id}',this.innerText)"
-          onkeydown="ikey(event,'${item.id}')">${esc(item.text)}</div>
+        ${(pon('audio') && item.text && item.text.includes('⟨🎙'))
+        ? `<div class="itext-rich ${item.checked?'done':''}">${renderRichText(item)}</div>`
+        : `<div class="itext ${item.checked?'done':''}" contenteditable="true" spellcheck="false"
+              onblur="renItem('${item.id}',this.innerText)"
+              onkeydown="ikey(event,'${item.id}')">${esc(item.text)}</div>`
+      }
         ${meta?`<div class="imeta">${meta}</div>`:''}
         ${extra}
         <div class="iend">${abtns}</div>
@@ -1491,172 +1494,266 @@ function renderFocus(list){
 }
 // ── 18. ÁUDIO INLINE ──────────────────────────────────
 reg('audio', {
-  name:'Áudio Inline', icon:'🎙️', desc:'Múltiplos áudios em qualquer ponto do texto', def:false,
+  name:'Áudio Inline', icon:'🎙️', desc:'Áudios embutidos dentro do texto', def:false,
   abtn(item){
-    return `<button class="iabtn" title="Inserir áudio" onclick="audioInsert('${item.id}')">🎙️</button>`;
-  },
-  extra(item){
-    if(!item.audios || !Object.keys(item.audios).length) return '';
-    return renderAudios(item);
+    return `<button class="iabtn" title="Inserir áudio no cursor" onclick="audioInsert('${item.id}')">🎙️</button>`;
   }
 });
 
-// ── CSS do plugin (injeta uma vez) ──
 (()=>{
-  const style = document.createElement('style');
-  style.textContent = `
-    .aud-list{display:flex;flex-direction:column;gap:6px;margin-top:6px}
-    .aud-row{display:flex;align-items:center;gap:6px;background:var(--surface2);
-             border:1px solid var(--border);border-radius:10px;padding:6px 10px}
-    .aud-label{font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--text3);
-               flex-shrink:0;min-width:22px;text-align:center}
-    .aud-player{flex:1;height:32px;min-width:0;accent-color:var(--accent)}
-    .aud-rec{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;
-             border-radius:8px;border:1px solid var(--border);background:var(--surface);
-             color:var(--text2);font-family:'Syne',sans-serif;font-size:12px;font-weight:600;
-             cursor:pointer;transition:all .15s;flex-shrink:0}
-    .aud-rec.on{background:rgba(232,86,94,.15);border-color:var(--red);color:var(--red);
-                animation:audpulse .7s infinite alternate}
-    .aud-del{width:22px;height:22px;border:none;background:transparent;color:var(--text3);
-             font-size:12px;cursor:pointer;border-radius:6px;flex-shrink:0;
-             display:flex;align-items:center;justify-content:center}
-    .aud-del:active{opacity:.6}
-    .aud-pos{font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--accent);
-             background:rgba(124,106,247,.1);border:1px solid rgba(124,106,247,.3);
-             border-radius:6px;padding:1px 6px;flex-shrink:0;max-width:120px;
-             overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    @keyframes audpulse{from{opacity:1}to{opacity:.4}}
+  const s = document.createElement('style');
+  s.textContent = `
+    /* texto do item com áudio — não editável diretamente */
+    .itext-rich{font-size:14px;line-height:2.2;color:var(--text);font-family:'Syne',sans-serif;
+                word-break:break-word;display:block;width:100%;min-height:20px;
+                outline:none;cursor:text}
+    .itext-rich.done{text-decoration:line-through;color:var(--text3)}
+
+    /* chip de áudio inline */
+    .aud-chip{display:inline-flex;align-items:center;gap:5px;
+              background:var(--surface2);border:1px solid var(--border);
+              border-radius:20px;padding:3px 8px 3px 6px;
+              margin:0 3px;vertical-align:middle;white-space:nowrap;
+              position:relative;top:-1px}
+    .aud-chip.pending{background:rgba(124,106,247,.1);border-color:rgba(124,106,247,.4)}
+    .aud-chip.recording{background:rgba(232,86,94,.12);border-color:var(--red)}
+
+    /* botão play customizado */
+    .aud-play{width:26px;height:26px;border-radius:50%;border:none;
+              background:var(--accent);color:white;font-size:11px;
+              cursor:pointer;display:flex;align-items:center;justify-content:center;
+              flex-shrink:0;transition:all .15s}
+    .aud-play:active{transform:scale(.9)}
+    .aud-play.playing{background:var(--green)}
+
+    /* barra de progresso custom */
+    .aud-bar-wrap{width:70px;height:4px;background:var(--border);border-radius:99px;
+                  cursor:pointer;flex-shrink:0;position:relative}
+    .aud-bar-fill{height:100%;background:var(--accent);border-radius:99px;
+                  width:0%;transition:width .1s linear;pointer-events:none}
+    .aud-playing .aud-bar-fill{background:var(--green)}
+
+    .aud-time{font-size:10px;font-family:'JetBrains Mono',monospace;
+              color:var(--text3);flex-shrink:0;min-width:28px}
+
+    /* botão gravar */
+    .aud-rec-btn{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;
+                 border-radius:8px;border:1px solid var(--border);background:var(--surface);
+                 color:var(--text2);font-family:'Syne',sans-serif;font-size:11px;
+                 font-weight:600;cursor:pointer;flex-shrink:0}
+    .aud-rec-btn.on{background:rgba(232,86,94,.15);border-color:var(--red);
+                    color:var(--red);animation:audpulse .7s infinite alternate}
+    .aud-del-btn{width:18px;height:18px;border:none;background:transparent;
+                 color:var(--text3);font-size:11px;cursor:pointer;
+                 display:flex;align-items:center;justify-content:center;
+                 flex-shrink:0;border-radius:4px}
+    .aud-del-btn:active{opacity:.6}
+
+    @keyframes audpulse{from{opacity:1}to{opacity:.35}}
   `;
-  document.head.appendChild(style);
+  document.head.appendChild(s);
 })();
 
-// ── Estado da gravação ──
-let _audRec      = null;
-let _audChunks   = [];
-let _audItemId   = null;
-let _audId       = null;
+// ── Estado global de gravação ──
+let _audRec = null, _audChunks = [], _audItemId = null, _audMarkId = null;
 
-// ── Funções principais ──
+// ── Players ativos (audio elements em memória) ──
+const _audPlayers = {}; // markId → HTMLAudioElement
 
+// ── Insere marcador no cursor dentro do itext ──
 function audioInsert(itemId){
   const list = getL(); if(!list) return;
   const item = find(list.items, itemId); if(!item) return;
 
-  // Captura o trecho de texto selecionado/cursor como "posição"
-  const el  = document.querySelector(`[data-id="${itemId}"] .itext`);
-  let pos = '';
-  if(el){
-    const sel = window.getSelection();
-    if(sel && sel.rangeCount && el.contains(sel.anchorNode)){
-      // Pega até 20 chars ao redor do cursor como referência de posição
-      const offset = sel.getRangeAt(0).startOffset;
-      const txt    = el.innerText || '';
-      const start  = Math.max(0, offset - 10);
-      const snip   = txt.slice(start, offset + 10).replace(/\n/g,' ').trim();
-      if(snip) pos = snip;
-    }
-    if(!pos) pos = (el.innerText||'').slice(0,24).trim();
-  }
-  if(!pos) pos = `áudio ${Object.keys(item.audios||{}).length + 1}`;
+  const markId = genId();
+  const marker = `⟨🎙${markId}⟩`;
 
-  const audId = genId();
+  // Tenta inserir no cursor do contenteditable
+  const el = document.querySelector(`[data-id="${itemId}"] .itext`);
+  if(el && el.isContentEditable){
+    el.focus();
+    const sel = window.getSelection();
+    if(sel && sel.rangeCount){
+      const range = sel.getRangeAt(0);
+      range.deleteContents();
+      const node = document.createTextNode(marker);
+      range.insertNode(node);
+      range.setStartAfter(node);
+      range.collapse(true);
+      sel.removeAllRanges(); sel.addRange(range);
+      item.text = el.innerText;
+    } else {
+      item.text = (item.text||'') + marker;
+    }
+  } else {
+    item.text = (item.text||'') + marker;
+  }
+
   if(!item.audios) item.audios = {};
-  item.audios[audId] = { src: null, pos: pos, idx: Object.keys(item.audios).length + 1 };
+  item.audios[markId] = { src: null };
   save(); renderCnt();
 
   // Auto-inicia gravação
-  setTimeout(() => audioStartRec(itemId, audId), 80);
+  setTimeout(() => audioStartRec(itemId, markId), 100);
 }
 
-function renderAudios(item){
-  const entries = Object.entries(item.audios || {});
-  if(!entries.length) return '';
+// ── Renderiza o texto com chips de áudio inline ──
+function renderRichText(item){
+  if(!item.text) return '';
+  const audios = item.audios || {};
 
-  const rows = entries.map(([audId, aud]) => {
-    if(!aud) return '';
-    const idx = aud.idx || '?';
-    const pos = aud.pos ? aud.pos : '';
+  // Divide nos marcadores ⟨🎙id⟩
+  const parts = item.text.split(/(⟨🎙[a-z0-9]+⟩)/g);
 
-    if(aud.src){
-      // Áudio gravado — mostra player
-      return `<div class="aud-row">
-        <span class="aud-label">🎙${idx}</span>
-        ${pos ? `<span class="aud-pos" title="${esc(pos)}">…${esc(pos)}…</span>` : ''}
-        <audio class="aud-player" controls src="${aud.src}" preload="none"></audio>
-        <button class="aud-del" onclick="audioDel('${item.id}','${audId}')" title="Remover">🗑</button>
-      </div>`;
+  return parts.map(part => {
+    const m = part.match(/^⟨🎙([a-z0-9]+)⟩$/);
+    if(!m) return esc(part);
+
+    const markId = m[1];
+    const aud    = audios[markId];
+
+    if(aud && aud.src){
+      // Player customizado
+      return `<span class="aud-chip" id="chip-${markId}">
+        <button class="aud-play" id="play-${markId}"
+          onclick="audioPlayPause('${markId}','${item.id}')">▶</button>
+        <span class="aud-bar-wrap" onclick="audioSeek(event,'${markId}')">
+          <div class="aud-bar-fill" id="bar-${markId}"></div>
+        </span>
+        <span class="aud-time" id="time-${markId}">0:00</span>
+        <button class="aud-del-btn" onclick="audioDel('${item.id}','${markId}')">✕</button>
+      </span>`;
     } else {
-      // Aguardando gravação
-      return `<div class="aud-row">
-        <span class="aud-label">🎙${idx}</span>
-        ${pos ? `<span class="aud-pos" title="${esc(pos)}">…${esc(pos)}…</span>` : ''}
-        <button class="aud-rec" id="arec-${audId}"
-          onclick="audioToggleRec('${item.id}','${audId}')">🎙️ Gravar</button>
-        <button class="aud-rec" onclick="audioImport('${item.id}','${audId}')">📎</button>
-        <button class="aud-del" onclick="audioDel('${item.id}','${audId}')" title="Cancelar">✕</button>
-      </div>`;
+      // Ainda sem áudio — mostra botões gravar/importar
+      const isRec = _audItemId===item.id && _audMarkId===markId && _audRec;
+      return `<span class="aud-chip pending ${isRec?'recording':''}">
+        <button class="aud-rec-btn ${isRec?'on':''}" id="arec-${markId}"
+          onclick="audioToggleRec('${item.id}','${markId}')">
+          ${isRec ? '⏹ Parar' : '🎙 Gravar'}
+        </button>
+        <button class="aud-rec-btn" onclick="audioImport('${item.id}','${markId}')">📎</button>
+        <button class="aud-del-btn" onclick="audioDel('${item.id}','${markId}')">✕</button>
+      </span>`;
     }
   }).join('');
-
-  return `<div class="aud-list">${rows}</div>`;
 }
 
-function audioToggleRec(itemId, audId){
-  if(_audItemId === itemId && _audId === audId && _audRec){
+// ── Player customizado ──
+function audioPlayPause(markId, itemId){
+  // Para todos os outros players
+  Object.entries(_audPlayers).forEach(([id, a]) => {
+    if(id !== markId){
+      a.pause();
+      const b = document.getElementById(`play-${id}`);
+      const c = document.getElementById(`chip-${id}`);
+      if(b) b.textContent = '▶';
+      if(c) c.classList.remove('aud-playing');
+    }
+  });
+
+  // Cria o player se não existir
+  if(!_audPlayers[markId]){
+    const list = getL(); if(!list) return;
+    const item = find(list.items, itemId); if(!item) return;
+    const src  = item.audios?.[markId]?.src; if(!src) return;
+
+    const a = new Audio(src);
+    _audPlayers[markId] = a;
+
+    // Atualiza barra e tempo
+    a.ontimeupdate = () => {
+      const pct = a.duration ? (a.currentTime / a.duration * 100) : 0;
+      const bar = document.getElementById(`bar-${markId}`);
+      const tim = document.getElementById(`time-${markId}`);
+      if(bar) bar.style.width = pct + '%';
+      if(tim) tim.textContent = fmtTime(a.currentTime);
+    };
+    a.onended = () => {
+      const b = document.getElementById(`play-${markId}`);
+      const c = document.getElementById(`chip-${markId}`);
+      const bar = document.getElementById(`bar-${markId}`);
+      if(b) b.textContent = '▶';
+      if(c) c.classList.remove('aud-playing');
+      if(bar) bar.style.width = '0%';
+    };
+  }
+
+  const a   = _audPlayers[markId];
+  const btn = document.getElementById(`play-${markId}`);
+  const chip= document.getElementById(`chip-${markId}`);
+
+  if(a.paused){
+    a.play();
+    if(btn)  btn.textContent = '⏸';
+    if(chip) chip.classList.add('aud-playing');
+  } else {
+    a.pause();
+    if(btn)  btn.textContent = '▶';
+    if(chip) chip.classList.remove('aud-playing');
+  }
+}
+
+function audioSeek(event, markId){
+  const a = _audPlayers[markId]; if(!a || !a.duration) return;
+  const rect = event.currentTarget.getBoundingClientRect();
+  const pct  = (event.clientX - rect.left) / rect.width;
+  a.currentTime = pct * a.duration;
+}
+
+function fmtTime(s){
+  const m = Math.floor(s/60);
+  const sec = Math.floor(s%60);
+  return `${m}:${sec.toString().padStart(2,'0')}`;
+}
+
+// ── Gravação ──
+function audioToggleRec(itemId, markId){
+  if(_audItemId===itemId && _audMarkId===markId && _audRec){
     _audRec.stop(); return;
   }
-  if(_audRec){ _audRec.onstop = null; _audRec.stop(); }
-  audioStartRec(itemId, audId);
+  if(_audRec){ _audRec.onstop=null; _audRec.stop(); }
+  audioStartRec(itemId, markId);
 }
 
-async function audioStartRec(itemId, audId){
+async function audioStartRec(itemId, markId){
   try{
     const stream = await navigator.mediaDevices.getUserMedia({ audio:true });
-    _audChunks = []; _audItemId = itemId; _audId = audId;
-    const mime = ['audio/webm','audio/mp4','audio/ogg'].find(t => MediaRecorder.isTypeSupported(t)) || '';
-    _audRec = new MediaRecorder(stream, mime ? { mimeType: mime } : {});
-
-    _audRec.ondataavailable = e => { if(e.data.size > 0) _audChunks.push(e.data); };
-
-    _audRec.onstop = () => {
-      stream.getTracks().forEach(t => t.stop());
-      const blob   = new Blob(_audChunks, { type: _audRec.mimeType || 'audio/webm' });
+    _audChunks=[]; _audItemId=itemId; _audMarkId=markId;
+    const mime = ['audio/webm','audio/mp4','audio/ogg'].find(t=>MediaRecorder.isTypeSupported(t))||'';
+    _audRec = new MediaRecorder(stream, mime?{mimeType:mime}:{});
+    _audRec.ondataavailable = e=>{ if(e.data.size>0) _audChunks.push(e.data); };
+    _audRec.onstop = ()=>{
+      stream.getTracks().forEach(t=>t.stop());
+      const blob = new Blob(_audChunks,{type:_audRec.mimeType||'audio/webm'});
       const reader = new FileReader();
-      reader.onload = ev => {
-        const list = getL(); if(!list) return;
-        const item = find(list.items, itemId); if(!item) return;
-        if(!item.audios[audId]) item.audios[audId] = {};
-        item.audios[audId].src = ev.target.result;
-        _audRec = null; _audItemId = null; _audId = null;
+      reader.onload = ev=>{
+        const list=getL(); if(!list) return;
+        const item=find(list.items,itemId); if(!item) return;
+        if(!item.audios) item.audios={};
+        if(!item.audios[markId]) item.audios[markId]={};
+        item.audios[markId].src = ev.target.result;
+        _audRec=null; _audItemId=null; _audMarkId=null;
         save(); renderCnt();
       };
       reader.readAsDataURL(blob);
     };
-
     _audRec.start();
-
-    // Atualiza botão
-    setTimeout(() => {
-      const btn = document.getElementById(`arec-${audId}`);
-      if(btn){ btn.textContent = '⏹️ Parar'; btn.classList.add('on'); }
-    }, 50);
-
-  } catch(e){
-    alert('Microfone inacessível:\n' + e.message);
-  }
+    // Atualiza visual imediatamente
+    renderCnt();
+  } catch(e){ alert('Microfone inacessível:\n'+e.message); }
 }
 
-function audioImport(itemId, audId){
-  const inp = document.createElement('input');
-  inp.type = 'file'; inp.accept = 'audio/*';
-  inp.onchange = e => {
-    const file = e.target.files[0]; if(!file) return;
-    const reader = new FileReader();
-    reader.onload = ev => {
-      const list = getL(); if(!list) return;
-      const item = find(list.items, itemId); if(!item) return;
-      if(!item.audios[audId]) item.audios[audId] = {};
-      item.audios[audId].src = ev.target.result;
+function audioImport(itemId, markId){
+  const inp=document.createElement('input'); inp.type='file'; inp.accept='audio/*';
+  inp.onchange=e=>{
+    const file=e.target.files[0]; if(!file) return;
+    const reader=new FileReader();
+    reader.onload=ev=>{
+      const list=getL(); if(!list) return;
+      const item=find(list.items,itemId); if(!item) return;
+      if(!item.audios) item.audios={};
+      if(!item.audios[markId]) item.audios[markId]={};
+      item.audios[markId].src=ev.target.result;
       save(); renderCnt();
     };
     reader.readAsDataURL(file);
@@ -1664,10 +1761,13 @@ function audioImport(itemId, audId){
   inp.click();
 }
 
-function audioDel(itemId, audId){
-  const list = getL(); if(!list) return;
-  const item = find(list.items, itemId); if(!item) return;
-  delete item.audios[audId];
+function audioDel(itemId, markId){
+  const list=getL(); if(!list) return;
+  const item=find(list.items,itemId); if(!item) return;
+  // Remove marcador do texto e o dado
+  item.text=(item.text||'').replace(`⟨🎙${markId}⟩`,'').trim();
+  if(item.audios) delete item.audios[markId];
+  if(_audPlayers[markId]){ _audPlayers[markId].pause(); delete _audPlayers[markId]; }
   save(); renderCnt();
 }
 // ══════════════════════════════════════════════════════
