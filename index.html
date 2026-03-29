@@ -1,1786 +1,1576 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>ListFlow</title>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
-:root{
-  --bg:#0e0e0f;--surface:#161618;--surface2:#1e1e21;--border:#2a2a2e;
-  --accent:#7c6af7;--red:#e8565e;--green:#3ecf8e;--yellow:#e8c84a;--blue:#4fa7e8;--orange:#f0804b;
-  --text:#e8e8ec;--text2:#888892;--text3:#55555e;--r:10px;
-  --sab:env(safe-area-inset-bottom,0px);
-}
-*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;overflow:hidden}
-body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;display:flex;flex-direction:column;height:100dvh}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#7c6af7">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="ListFlow">
+  <link rel="manifest" href="manifest.json">
+  <title>ListFlow</title>
+  <link rel="icon" type="image/svg+xml"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧰</text></svg>">
+  <link rel="apple-touch-icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧰</text></svg>">
+  <style>
+    :root {
+      --bg: #0e0e0f;
+      --surface: #161618;
+      --surface2: #1e1e21;
+      --border: #2a2a2e;
+      --accent: #7c6af7;
+      --red: #e8565e;
+      --green: #3ecf8e;
+      --yellow: #e8c84a;
+      --blue: #4fa7e8;
+      --orange: #f0804b;
+      --text: #e8e8ec;
+      --text2: #888892;
+      --text3: #55555e;
+      --r: 10px;
+      --sab: env(safe-area-inset-bottom, 0px);
+    }
 
-/* ─── HEADER ─── */
-.hdr{display:flex;align-items:center;padding:0 14px;height:52px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;gap:10px;z-index:50}
-.logo{font-size:18px;font-weight:800;color:var(--accent);letter-spacing:-.5px}.logo span{color:var(--text)}
-.hpill{font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--text3);border:1px solid var(--border);padding:2px 7px;border-radius:20px}
-.hright{margin-left:auto;display:flex;gap:6px}
-.ibtn{width:36px;height:36px;border-radius:var(--r);background:var(--surface2);border:1px solid var(--border);color:var(--text2);font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
-.ibtn:active{opacity:.7;transform:scale(.93)}
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent }
+    html, body { height: 100%; overflow: hidden }
+    body { background: var(--bg); color: var(--text); font-family: 'Syne', sans-serif; display: flex; flex-direction: column; height: 100dvh }
 
-/* ─── LAYOUT ─── */
-.body{flex:1;display:flex;overflow:hidden;position:relative}
+    .hdr { display: flex; align-items: center; padding: 0 14px; height: 72px; background: var(--surface); border-bottom: 1px solid var(--border); flex-shrink: 0; gap: 10px; z-index: 50 }
+    .logo { font-size: 18px; font-weight: 800; color: var(--accent); letter-spacing: -.5px }
+    .logo span { color: var(--text) }
+    .hpill { font-size: 10px; font-family: 'JetBrains Mono', monospace; color: var(--text3); border: 1px solid var(--border); padding: 2px 7px; border-radius: 20px }
+    .hright { margin-left: auto; display: flex; gap: 6px }
+    .ibtn { width: 36px; height: 46px; border-radius: var(--r); background: var(--surface2); border: 1px solid var(--border); color: var(--text2); font-size: 17px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .15s }
+    .ibtn:active { opacity: .7; transform: scale(.93) }
 
-/* ─── SIDEBAR ─── */
-.sidebar{width:285px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden;transition:transform .3s cubic-bezier(.4,0,.2,1);z-index:40}
-@media(max-width:680px){
-  .sidebar{position:absolute;top:0;left:0;bottom:0;transform:translateX(-100%);box-shadow:6px 0 30px rgba(0,0,0,.6)}
-  .sidebar.open{transform:translateX(0)}
-  .overlay{position:absolute;inset:0;background:rgba(0,0,0,.55);z-index:39;display:none}
-  .overlay.open{display:block}
-}
-@media(min-width:681px){.overlay{display:none!important}.mbtn{display:none!important}}
-.sb-scroll{flex:1;overflow-y:auto;padding:12px}
-.sb-label{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);padding:4px 4px 8px}
-.pg{display:flex;flex-direction:column;gap:3px;margin-bottom:16px}
-.prow{display:flex;align-items:center;gap:10px;padding:10px;border-radius:var(--r);cursor:pointer;transition:background .15s;border:1px solid transparent;user-select:none}
-.prow:active{opacity:.8}.prow.on{background:rgba(124,106,247,.1);border-color:rgba(124,106,247,.2)}
-.picon{font-size:18px;width:22px;text-align:center}
-.pinfo{flex:1;min-width:0}
-.pname{font-size:13px;font-weight:600;color:var(--text2)}.prow.on .pname{color:var(--accent)}
-.pdesc{font-size:11px;color:var(--text3);margin-top:1px}
-.tpill{width:36px;height:20px;border-radius:10px;background:var(--border);position:relative;transition:background .2s;flex-shrink:0}
-.tpill::after{content:'';position:absolute;width:14px;height:14px;border-radius:50%;background:white;top:3px;left:3px;transition:transform .2s}
-.prow.on .tpill{background:var(--accent)}.prow.on .tpill::after{transform:translateX(16px)}
-.lents{display:flex;flex-direction:column;gap:3px}
-.lent{display:flex;align-items:center;gap:8px;padding:10px;border-radius:var(--r);cursor:pointer;transition:background .15s;border:1px solid transparent}
-.lent:active{opacity:.8}.lent.on{background:rgba(124,106,247,.1);border-color:rgba(124,106,247,.2)}
-.ldot{width:7px;height:7px;border-radius:50%;flex-shrink:0;opacity:.4}
-.lent.on .ldot{opacity:1}
-.lname{flex:1;font-size:13px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.lent.on .lname{color:var(--text)}
-.lcnt{font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--text3);flex-shrink:0}
-.ldel{width:20px;height:20px;border-radius:5px;border:none;background:transparent;color:var(--text3);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s}
-.lent:hover .ldel,.lent:active .ldel{opacity:1}
-.sb-foot{padding:12px;border-top:1px solid var(--border);flex-shrink:0;display:flex;flex-direction:column;gap:8px}
-.nlbtn{width:100%;padding:11px;border-radius:var(--r);background:rgba(124,106,247,.1);border:1px dashed rgba(124,106,247,.35);color:var(--accent);font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:background .15s;display:flex;align-items:center;justify-content:center;gap:6px}
-.nlbtn:active{background:rgba(124,106,247,.2)}
-.guidebtn{width:100%;padding:9px;border-radius:var(--r);background:transparent;border:1px solid var(--border);color:var(--text3);font-family:'Syne',sans-serif;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px}
-.guidebtn:active{opacity:.7}
+    .body { flex: 1; display: flex; overflow: hidden; position: relative }
 
-/* ─── MAIN ─── */
-.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
-.tb{background:var(--surface);border-bottom:1px solid var(--border);padding:8px 14px;display:flex;align-items:center;gap:8px;flex-shrink:0;overflow-x:auto;scrollbar-width:none}
-.tb::-webkit-scrollbar{display:none}
-.tbsep{width:1px;height:20px;background:var(--border);flex-shrink:0;margin:0 2px}
-.tbbtn{padding:7px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);font-family:'Syne',sans-serif;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .15s;display:flex;align-items:center;gap:5px;flex-shrink:0}
-.tbbtn:active{opacity:.75;transform:scale(.97)}.tbbtn.pri{background:var(--accent);border-color:var(--accent);color:white}
-.srch{position:relative;flex-shrink:0}
-.srch input{background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:12px;padding:7px 10px 7px 30px;outline:none;width:150px;transition:all .2s}
-.srch input:focus{border-color:var(--accent);width:200px}
-.srch input::placeholder{color:var(--text3)}
-.sicon{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:13px;pointer-events:none}
+    /* ─── SIDEBAR ─── */
+    .sidebar { width: 270px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; overflow: hidden; transition: transform .3s cubic-bezier(.4, 0, .2, 1); z-index: 40; }
+    @media(max-width:680px) {
+      .sidebar { position: absolute; top: 0; left: 0; bottom: 0; transform: translateX(-100%); box-shadow: 6px 0 30px rgba(0,0,0,.6) }
+      .sidebar.open { transform: translateX(0) }
+      .overlay { position: absolute; inset: 0; background: rgba(0,0,0,.55); z-index: 39; display: none }
+      .overlay.open { display: block }
+    }
+    @media(min-width:681px) { .overlay { display: none !important } .mbtn { display: none !important } }
 
-/* ─── CONTENT ─── */
-.cnt{flex:1;overflow:auto;padding:16px;padding-bottom:calc(80px + var(--sab));display:flex;flex-direction:column;gap:14px}
-.empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:40px 20px;color:var(--text3)}
-.empty-ico{font-size:60px;opacity:.2}
-.empty h2{font-size:18px;color:var(--text2)}
-.empty p{font-size:13px;line-height:1.7;max-width:280px}
-.lhdr{display:flex;flex-direction:column;gap:8px}
-.ltrow{display:flex;align-items:center;gap:10px}
-.ltinput{flex:1;font-family:'Syne',sans-serif;font-size:20px;font-weight:700;background:transparent;border:none;color:var(--text);outline:none;border-bottom:2px solid transparent;transition:border-color .2s;min-width:0}
-.ltinput:focus{border-bottom-color:var(--accent)}
+    .sb-search-wrap { position: relative; padding: 10px 12px; flex-shrink: 0; border-bottom: 1px solid var(--border); }
+    .sb-search-wrap input { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--r); color: var(--text); font-family: 'Syne', sans-serif; font-size: 13px; padding: 8px 32px 8px 12px; outline: none; transition: border-color .2s; }
+    .sb-search-wrap input:focus { border-color: var(--accent) }
+    .sb-search-wrap input::placeholder { color: var(--text3) }
+    .sb-clear { position: absolute; right: 20px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text3); font-size: 14px; cursor: pointer; padding: 2px; line-height: 1; display: none; }
+    .sb-clear.visible { display: flex; align-items: center; justify-content: center }
 
-/* ─── PROGRESS ─── */
-.prog{display:flex;flex-direction:column;gap:4px}
-.pgbg{background:var(--surface2);border-radius:99px;height:5px;overflow:hidden}
-.pgfill{height:100%;background:linear-gradient(90deg,var(--accent),var(--green));border-radius:99px;transition:width .4s cubic-bezier(.4,0,.2,1)}
-.pglabel{font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--text3)}
+    .sb-section { display: flex; flex-direction: column; min-height: 0; transition: flex .35s cubic-bezier(.4,0,.2,1); }
+    .sb-section.expandido { flex: 3 }
+    .sb-section.recolhido { flex: 0.6 }
+    .sb-section:not(.expandido):not(.recolhido) { flex: 1 }
+    .sb-section-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px 6px; flex-shrink: 0; cursor: pointer; user-select: none; }
+    .sb-section-header:active { opacity: .7 }
+    .sb-label { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text3); display: flex; align-items: center; gap: 6px; }
+    .sb-label-count { font-size: 10px; font-family: 'JetBrains Mono', monospace; color: var(--text3); border: 1px solid var(--border); padding: 1px 6px; border-radius: 20px; font-weight: 400; text-transform: none; letter-spacing: 0; }
+    .sb-section-body { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 0 8px 8px; min-height: 0; }
+    .sb-section-body::-webkit-scrollbar { width: 3px }
+    .sb-section-body::-webkit-scrollbar-track { background: transparent }
+    .sb-section-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px }
+    .sb-divider { height: 1px; background: var(--border); flex-shrink: 0; margin: 0; }
 
-/* ─── IMPORT ─── */
-.import{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
-.import summary{padding:11px 14px;cursor:pointer;font-size:13px;color:var(--text2);font-weight:600;list-style:none;display:flex;align-items:center;gap:8px}
-.import summary::-webkit-details-marker{display:none}
-.import-body{padding:0 12px 12px;display:flex;flex-direction:column;gap:8px}
-.import-body textarea{background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:12px;padding:10px;resize:vertical;min-height:90px;outline:none;transition:border-color .2s;line-height:1.7;width:100%}
-.import-body textarea:focus{border-color:var(--accent)}
-.import-hint{font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;line-height:1.5}
-.import-acts{display:flex;gap:8px;flex-wrap:wrap}
+    .pg { display: flex; flex-direction: column; gap: 2px }
+    .prow { display: flex; align-items: center; gap: 8px; padding: 8px 6px; border-radius: var(--r); cursor: pointer; transition: background .15s; border: 1px solid transparent; user-select: none; }
+    .prow:active { opacity: .8 }
+    .prow.on { background: rgba(124,106,247,.1); border-color: rgba(124,106,247,.2) }
+    .prow.sb-hidden { display: none }
+    .picon { font-size: 16px; width: 20px; text-align: center; flex-shrink: 0 }
+    .pinfo { flex: 1; min-width: 0 }
+    .pname { font-size: 12px; font-weight: 600; color: var(--text2) }
+    .prow.on .pname { color: var(--accent) }
+    .pdesc { font-size: 10px; color: var(--text3); margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+    .tpill { width: 32px; height: 18px; border-radius: 9px; background: var(--border); position: relative; transition: background .2s; flex-shrink: 0; }
+    .tpill::after { content: ''; position: absolute; width: 12px; height: 12px; border-radius: 50%; background: white; top: 3px; left: 3px; transition: transform .2s; }
+    .prow.on .tpill { background: var(--accent) }
+    .prow.on .tpill::after { transform: translateX(14px) }
 
-/* ─── ITEMS ─── */
-pading
-.iblock{display:flex;flex-direction:column;min-width:max-content;width:100%}
-.irow{display:flex;align-items:flex-start;gap:5px;padding:5px 6px;border-radius:8px;transition:background .1s;min-width:max-content;width:100%}
-.irow:active{background:var(--surface2)}
-.itog {padding: 14px 16px 14px 6px;width: 20px;height: 20px;flex-shrink: 0;margin-top: 5px;display: flex;align-items: center;justify-content: center;cursor: pointer;color: var(--text3);font-size: 24px;border-radius: 4px;transition: all .15s;user-select: none;}
-.itog.nc{opacity:0;pointer-events:none}
-.icb{width:28px;height:28px;flex-shrink:0;margin-top:5px;appearance:none;-webkit-appearance:none;border:2px solid var(--border);border-radius:6px;cursor:pointer;position:relative;transition:all .2s;background:transparent}
-.icb:checked{background:var(--accent);border-color:var(--accent)}
-.icb:checked::after{content:'';position:absolute;left:7px;top:4px;width:6px;height:10px;border:2px solid white;border-left:none;border-top:none;transform:rotate(45deg)}
-.icb.par{border-color:var(--accent);background:rgba(124,106,247,.15)}
-.icb.par::after{content:'';position:absolute;left:7px;top:11px;width:10px;height:2px;background:var(--accent);border-radius:1px}
-/* ibody ocupa toda a largura restante, texto nunca comprime */
-.ibody{flex:1;min-width:0;padding-top:3px}
-.itext{font-size:16px;line-height:1.5;color:var(--text);outline:none;background:transparent;border:none;font-family:'Syne',sans-serif;cursor:text;white-space:nowrap;display:block;min-height:20px}
-.itext.done{text-decoration:line-through;color:var(--text3)}
-.imeta{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px;align-items:center}
-/* iend fica dentro do ibody, abaixo do texto — nunca na lateral */
-.iend{display:flex;align-items:center;gap:4px;margin-top:4px;flex-wrap:wrap}
-.iabtn{width:28px;height:28px;border-radius:8px;border:none;background:var(--surface2);color:var(--text3);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
-.iabtn:active{opacity:.7;transform:scale(.91)}
-.kids{padding-left:20px;border-left:1px solid var(--border);margin-left:12px;min-width:max-content}
-.kids.col{display:none}
+    .lents { display: flex; flex-direction: column; gap: 2px }
+    .lent { display: flex; align-items: center; gap: 8px; padding: 9px 6px; border-radius: var(--r); cursor: pointer; transition: background .15s; border: 1px solid transparent; }
+    .lent:active { opacity: .8 }
+    .lent.on { background: rgba(124,106,247,.1); border-color: rgba(124,106,247,.2) }
+    .lent.sb-hidden { display: none }
+    .ldot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; opacity: .4 }
+    .lent.on .ldot { opacity: 1 }
+    .lname { flex: 1; font-size: 13px; color: var(--text2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+    .lent.on .lname { color: var(--text) }
+    .lcnt { font-size: 10px; font-family: 'JetBrains Mono', monospace; color: var(--text3); flex-shrink: 0 }
+    .ldel { width: 20px; height: 20px; border-radius: 5px; border: none; background: transparent; color: var(--text3); font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity .15s; }
+    .lent:hover .ldel, .lent:active .ldel { opacity: 1 }
 
-/* ─── BADGES ─── */
-.tag{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-family:'JetBrains Mono',monospace;padding:2px 7px;border-radius:20px;border:1px solid;cursor:pointer;line-height:1.4;white-space:nowrap}
-.tred{color:#e8565e;border-color:rgba(232,86,94,.4);background:rgba(232,86,94,.1)}
-.toran{color:#f0804b;border-color:rgba(240,128,75,.4);background:rgba(240,128,75,.1)}
-.tyel{color:#e8c84a;border-color:rgba(232,200,74,.4);background:rgba(232,200,74,.1)}
-.tgrn{color:#3ecf8e;border-color:rgba(62,207,142,.4);background:rgba(62,207,142,.1)}
-.tblu{color:#4fa7e8;border-color:rgba(79,167,232,.4);background:rgba(79,167,232,.1)}
-.tpur{color:#a57af0;border-color:rgba(165,122,240,.4);background:rgba(165,122,240,.1)}
-.tpnk{color:#e87ac8;border-color:rgba(232,122,200,.4);background:rgba(232,122,200,.1)}
-.due{font-size:10px;font-family:'JetBrains Mono',monospace;padding:2px 7px;border-radius:20px;white-space:nowrap;cursor:pointer}
-.dnorm{color:var(--text3);background:var(--surface2);border:1px solid var(--border)}
-.dsoon{color:#e8c84a;background:rgba(232,200,74,.1);border:1px solid rgba(232,200,74,.3)}
-.dover{color:var(--red);background:rgba(232,86,94,.1);border:1px solid rgba(232,86,94,.3)}
-.pribadge{font-size:13px;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;border-radius:6px;cursor:pointer;flex-shrink:0;margin-top:5px;background:var(--surface2)}
-.inote{font-size:12px;color:var(--text3);font-family:'JetBrains Mono',monospace;line-height:1.5;margin-top:4px;border-left:2px solid var(--border);padding-left:8px;outline:none;word-break:break-word;min-height:16px}
-.estbadge{font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--blue);background:rgba(79,167,232,.1);border:1px solid rgba(79,167,232,.3);padding:2px 7px;border-radius:20px;white-space:nowrap}
-/* plugin: recurrence */
-.recbadge{font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--green);background:rgba(62,207,142,.1);border:1px solid rgba(62,207,142,.3);padding:2px 7px;border-radius:20px;white-space:nowrap;cursor:pointer}
-/* plugin: listcolor */
-.lcbadge{display:inline-block;width:10px;height:10px;border-radius:50%;flex-shrink:0}
-/* plugin: link */
-.linkbadge{font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--blue);padding:2px 7px;border-radius:20px;background:rgba(79,167,232,.1);border:1px solid rgba(79,167,232,.3);white-space:nowrap;text-decoration:none;cursor:pointer;display:inline-flex;align-items:center;gap:3px}
+    .sb-foot { padding: 10px 12px; border-top: 1px solid var(--border); flex-shrink: 0; display: flex; flex-direction: column; gap: 6px; }
+    .nlbtn { width: 100%; padding: 10px; border-radius: var(--r); background: rgba(124,106,247,.1); border: 1px dashed rgba(124,106,247,.35); color: var(--accent); font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; transition: background .15s; display: flex; align-items: center; justify-content: center; gap: 6px; }
+    .nlbtn:active { background: rgba(124,106,247,.2) }
+    .guidebtn { width: 100%; padding: 8px; border-radius: var(--r); background: transparent; border: 1px solid var(--border); color: var(--text3); font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
+    .guidebtn:active { opacity: .7 }
 
-/* ─── EXPORT PANEL (plugin: export) ─── */
-.export-panel{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:12px;display:flex;flex-direction:column;gap:8px}
-.export-pre{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text2);overflow-x:auto;white-space:pre;max-height:160px;overflow-y:auto}
+    /* ─── MAIN ─── */
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0 }
+    .tb { background: var(--surface); border-bottom: 1px solid var(--border); padding: 8px 14px; display: flex; align-items: center; gap: 8px; flex-shrink: 0; overflow-x: auto; scrollbar-width: none }
+    .tb::-webkit-scrollbar { display: none }
+    .tbsep { width: 1px; height: 33px; background: var(--border); flex-shrink: 0; margin: 0 2px; }
+    .tbbtn { padding: 8px 7px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface2); color: var(--text2); font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all .15s; display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
+    .tbbtn:active { opacity: .75; transform: scale(.97) }
+    .tbbtn.pri { background: var(--accent); border-color: var(--accent); color: white }
+    @media (max-width: 767px) { .tbbtn.pri { display: none; } }
 
-/* ─── KANBAN (plugin: kanban) ─── */
-.kanban-wrap{display:flex;gap:12px;overflow-x:auto;padding-bottom:8px;min-height:200px}
-.kanban-col{min-width:200px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);display:flex;flex-direction:column;flex-shrink:0}
-.kanban-hdr{padding:10px 12px;font-size:12px;font-weight:700;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px}
-.kanban-body{padding:8px;display:flex;flex-direction:column;gap:6px;flex:1}
-.kanban-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:13px;line-height:1.4;cursor:pointer;transition:all .15s}
-.kanban-card:active{opacity:.75}
-.kanban-card.done-card{text-decoration:line-through;color:var(--text3)}
+    .srch { position: relative; flex-shrink: 0 }
+    .srch input { height: 33px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 12px; padding: 0px 10px 0px 30px; outline: none; width: 150px; transition: all .2s; }
+    .srch input:focus { border-color: var(--accent); width: 200px }
+    .srch input::placeholder { color: var(--text3) }
+    .sicon { position: absolute; right: 9px; top: 50%; transform: translateY(-50%); color: var(--text3); font-size: 13px; pointer-events: none }
+    .srch-clear { position: absolute; left: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text3); font-size: 14px; cursor: pointer; padding: 2px; line-height: 1; display: none; }
+    .srch-clear.visible { display: flex; align-items: center; justify-content: center }
 
-/* ─── FAB ─── */
-.fab{position:fixed;left:18px;bottom:calc(18px + var(--sab));width:54px;height:54px;border-radius:50%;background:var(--accent);border:none;color:white;font-size:28px;cursor:pointer;box-shadow:0 4px 22px rgba(124,106,247,.55);display:flex;align-items:center;justify-content:center;z-index:30;transition:all .2s}
-.fab:active{transform:scale(.91)}
-@media(min-width:681px){.fab{display:none}}
+    /* ─── CONTENT ─── */
+    .cnt { flex: 1; overflow: auto; padding: 16px; padding-bottom: calc(80px + var(--sab)); display: flex; flex-direction: column; gap: 14px }
+    .empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center; padding: 40px 20px; color: var(--text3) }
+    .empty-ico { font-size: 60px; opacity: .2 }
+    .empty h2 { font-size: 18px; color: var(--text2) }
+    .empty p { font-size: 13px; line-height: 1.7; max-width: 280px }
+    .lhdr { display: flex; flex-direction: column; gap: 8px }
+    .ltrow { display: flex; align-items: center; gap: 10px }
+    .ltinput { flex: 1; font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; background: transparent; border: none; color: var(--text); outline: none; border-bottom: 2px solid transparent; transition: border-color .2s; min-width: 0 }
+    .ltinput:focus { border-bottom-color: var(--accent) }
 
-/* ─── MODAL / BOTTOM SHEET ─── */
-.mback{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:200;display:flex;align-items:flex-end;justify-content:center;backdrop-filter:blur(4px);opacity:0;pointer-events:none;transition:opacity .25s}
-.mback.open{opacity:1;pointer-events:all}
-.msheet{background:var(--surface);border-radius:18px 18px 0 0;padding:20px 20px calc(20px + var(--sab));width:100%;max-width:520px;max-height:88vh;display:flex;flex-direction:column;gap:14px;transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);overflow-y:auto}
-.mback.open .msheet{transform:translateY(0)}
-.mhandle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto -4px}
-.mtitle{font-size:16px;font-weight:700}
-.macts{margin-top: 18px;display:flex;gap:8px}
-.fg{display:flex;flex-direction:column;gap:6px}
-.fl{font-size:12px;color:var(--text3);font-weight:600;letter-spacing:.5px}
-input[type=text],input[type=date],input[type=url],input[type=number],select,.fta{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-family:'Syne',sans-serif;font-size:15px;padding:11px 12px;outline:none;width:100%;transition:border-color .2s}
-input:focus,select:focus,.fta:focus{border-color:var(--accent)}
-.fta{resize:vertical;min-height:80px;font-size:13px;font-family:'JetBrains Mono',monospace;line-height:1.7}
-.cpick{display:flex;gap:10px;flex-wrap:wrap;padding:4px 0}
-.copt{width:34px;height:34px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:all .15s}
-.copt.sel{border-color:white;transform:scale(1.18)}
-.co-red{background:#e8565e}.co-oran{background:#f0804b}.co-yel{background:#e8c84a}
-.co-grn{background:#3ecf8e}.co-blu{background:#4fa7e8}.co-pur{background:#a57af0}.co-pnk{background:#e87ac8}
-/* list color swatches */
-.lcswatch{width:28px;height:28px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:all .15s}
-.lcswatch.sel{border-color:white;transform:scale(1.15)}
-.btn{margin-top: 11px;padding:11px 16px;border-radius:var(--r);border:1px solid var(--border);background:var(--surface2);color:var(--text);font-family:'Syne',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px}
-.btn:active{opacity:.75}.btn.pri{background:var(--accent);border-color:var(--accent);color:white;flex:1}.btn.full{width:100%}.btn.dng{border-color:rgba(232,86,94,.4);color:var(--red)}
-.cpiece{position:fixed;width:8px;height:8px;z-index:999;animation:cfal 1.2s ease-in forwards;pointer-events:none}
-@keyframes cfal{0%{transform:translateY(0) rotate(0);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
-::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
-.search-hidden{display:none!important}
-.smatch{color:var(--green)!important}
+    .prog { display: flex; flex-direction: column; gap: 4px }
+    .pgbg { background: var(--surface2); border-radius: 99px; height: 5px; overflow: hidden }
+    .pgfill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--green)); border-radius: 99px; transition: width .4s cubic-bezier(.4,0,.2,1) }
+    .pglabel { font-size: 11px; font-family: 'JetBrains Mono', monospace; color: var(--text3) }
 
-/* ─── GUIDE MODAL ─── */
-.guide-block{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:8px}
-.guide-block h4{font-size:13px;font-weight:700;color:var(--accent);display:flex;align-items:center;gap:6px}
-.guide-block p,.guide-block li{font-size:12px;color:var(--text2);line-height:1.7;font-family:'JetBrains Mono',monospace}
-.guide-block ul{padding-left:16px;display:flex;flex-direction:column;gap:2px}
-code{background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:1px 5px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--accent)}
+    .import { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--r); overflow: hidden }
+    .import summary { padding: 11px 14px; cursor: pointer; font-size: 13px; color: var(--text2); font-weight: 600; list-style: none; display: flex; align-items: center; gap: 8px }
+    .import summary::-webkit-details-marker { display: none }
+    .import-body { padding: 0 12px 12px; display: flex; flex-direction: column; gap: 8px }
+    .import-body textarea { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 12px; padding: 10px; resize: vertical; min-height: 90px; outline: none; transition: border-color .2s; line-height: 1.7; width: 100% }
+    .import-body textarea:focus { border-color: var(--accent) }
+    .import-hint { font-size: 11px; color: var(--text3); font-family: 'JetBrains Mono', monospace; line-height: 1.5 }
+    .import-acts { display: flex; gap: 8px; flex-wrap: wrap }
 
-/* ─── VIEW TOGGLE ─── */
-.view-tabs{display:flex;gap:6px}
-.vtab{padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text3);font-family:'Syne',sans-serif;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s}
-.vtab.on{background:var(--accent);border-color:var(--accent);color:white}
-.vtab:active{opacity:.75}
-</style>
+    .iblock { display: flex; flex-direction: column; min-width: max-content; width: 100% }
+    .irow { display: flex; align-items: flex-start; gap: 5px; padding: 5px 6px; border-radius: 8px; transition: background .1s; min-width: max-content; width: 100% }
+    .irow:active { background: var(--surface2) }
+    .itog { padding: 14px 16px 14px 6px; width: 20px; height: 20px; flex-shrink: 0; margin-top: 5px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text3); font-size: 24px; border-radius: 4px; transition: all .15s; user-select: none; }
+    .itog.nc { opacity: 0; pointer-events: none }
+    .icb { width: 30px; height: 28px; flex-shrink: 0; margin-top: 5px; appearance: none; -webkit-appearance: none; border: 2px solid var(--border); border-radius: 6px; cursor: pointer; position: relative; transition: all .2s; background: transparent }
+    .icb:checked { background: var(--accent); border-color: var(--accent) }
+    .icb:checked::after { content: ''; position: absolute; left: 7px; top: 4px; width: 6px; height: 10px; border: 2px solid white; border-left: none; border-top: none; transform: rotate(45deg) }
+    .icb.par { border-color: var(--accent); }
+    .icb.par::after { content: ''; position: absolute; left: 7px; border-radius: 1px }
+    .ibody { flex: 1; min-width: 0; padding-top: 3px }
+    .itext { font-size: 16px; line-height: 1.5; color: var(--text); outline: none; background: transparent; border: none; font-family: 'JetBrains Mono', monospace; cursor: text; white-space: pre-wrap; word-break: break-word; display: block; min-height: 20px }
+    .itext.done { color: var(--text3) }
+    .imeta { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px; align-items: center }
+    .iend { display: flex; align-items: center; gap: 4px; margin-top: 4px; flex-wrap: wrap }
+    .iabtn { width: 43px; height: 22px; border-radius: 8px; border: none; background: var(--surface2); color: var(--text3); font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .15s; flex-shrink: 0; }
+    .iabtn:active { opacity: .7; transform: scale(.91) }
+    .kids { padding-left: 20px; border-left: 1px solid var(--border); margin-left: 12px; min-width: max-content }
+    .kids.col { display: none }
+
+    .tag { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-family: 'JetBrains Mono', monospace; padding: 2px 7px; border-radius: 20px; border: 1px solid; cursor: pointer; line-height: 1.4; white-space: nowrap }
+    .tred { color: #e8565e; border-color: rgba(232,86,94,.4); background: rgba(232,86,94,.1) }
+    .toran { color: #f0804b; border-color: rgba(240,128,75,.4); background: rgba(240,128,75,.1) }
+    .tyel { color: #e8c84a; border-color: rgba(232,200,74,.4); background: rgba(232,200,74,.1) }
+    .tgrn { color: #3ecf8e; border-color: rgba(62,207,142,.4); background: rgba(62,207,142,.1) }
+    .tblu { color: #4fa7e8; border-color: rgba(79,167,232,.4); background: rgba(79,167,232,.1) }
+    .tpur { color: #a57af0; border-color: rgba(165,122,240,.4); background: rgba(165,122,240,.1) }
+    .tpnk { color: #e87ac8; border-color: rgba(232,122,200,.4); background: rgba(232,122,200,.1) }
+    .due { font-size: 10px; font-family: 'JetBrains Mono', monospace; padding: 2px 7px; border-radius: 20px; white-space: nowrap; cursor: pointer }
+    .dnorm { color: var(--text3); background: var(--surface2); border: 1px solid var(--border) }
+    .dsoon { color: #e8c84a; background: rgba(232,200,74,.1); border: 1px solid rgba(232,200,74,.3) }
+    .dover { color: var(--red); background: rgba(232,86,94,.1); border: 1px solid rgba(232,86,94,.3) }
+    .pribadge { font-size: 13px; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; border-radius: 6px; cursor: pointer; flex-shrink: 0; margin-top: 5px; background: var(--surface2) }
+    .inote { font-size: 12px; color: var(--text3); font-family: 'JetBrains Mono', monospace; line-height: 1.5; margin-top: 4px; border-left: 2px solid var(--border); padding-left: 8px; outline: none; word-break: break-word; min-height: 16px }
+    .estbadge { font-size: 10px; font-family: 'JetBrains Mono', monospace; color: var(--blue); background: rgba(79,167,232,.1); border: 1px solid rgba(79,167,232,.3); padding: 2px 7px; border-radius: 20px; white-space: nowrap }
+    .recbadge { font-size: 10px; font-family: 'JetBrains Mono', monospace; color: var(--green); background: rgba(62,207,142,.1); border: 1px solid rgba(62,207,142,.3); padding: 2px 7px; border-radius: 20px; white-space: nowrap; cursor: pointer }
+    .lcbadge { display: inline-block; width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0 }
+    .linkbadge { font-size: 10px; font-family: 'JetBrains Mono', monospace; color: var(--blue); padding: 2px 7px; border-radius: 20px; background: rgba(79,167,232,.1); border: 1px solid rgba(79,167,232,.3); white-space: nowrap; text-decoration: none; cursor: pointer; display: inline-flex; align-items: center; gap: 3px }
+
+    .export-panel { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--r); padding: 12px; display: flex; flex-direction: column; gap: 8px }
+    .export-pre { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text2); overflow-x: auto; white-space: pre; max-height: 160px; overflow-y: auto }
+
+    .kanban-wrap { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px; min-height: 200px }
+    .kanban-col { min-width: 200px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--r); display: flex; flex-direction: column; flex-shrink: 0 }
+    .kanban-hdr { padding: 10px 12px; font-size: 12px; font-weight: 700; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 6px }
+    .kanban-body { padding: 8px; display: flex; flex-direction: column; gap: 6px; flex: 1 }
+    .kanban-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; font-size: 13px; line-height: 1.4; cursor: pointer; transition: all .15s }
+    .kanban-card:active { opacity: .75 }
+    .kanban-card.done-card { text-decoration: line-through; color: var(--text3) }
+
+    .fab { position: fixed; left: 18px; bottom: calc(148px + var(--sab)); width: 54px; height: 54px; border-radius: 50%; background: var(--accent); border: none; color: white; font-size: 28px; cursor: pointer; box-shadow: 0 4px 22px rgba(124,106,247,.55); display: flex; align-items: center; justify-content: center; z-index: 30; transition: all .2s }
+    .fab:active { transform: scale(.91) }
+    @media(min-width:681px) { .fab { display: none } }
+
+    .mback { position: fixed; inset: 0; background: rgba(0,0,0,.65); z-index: 200; display: flex; align-items: flex-end; justify-content: center; backdrop-filter: blur(4px); opacity: 0; pointer-events: none; transition: opacity .25s }
+    .mback.open { opacity: 1; pointer-events: all }
+    .msheet { background: var(--surface); border-radius: 18px 18px 0 0; padding: 20px 20px calc(20px + var(--sab)); width: 100%; max-width: 520px; max-height: 88vh; display: flex; flex-direction: column; gap: 14px; transform: translateY(100%); transition: transform .3s cubic-bezier(.4,0,.2,1); overflow-y: auto }
+    .mback.open .msheet { transform: translateY(0) }
+    .mhandle { width: 36px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto -4px }
+    .mtitle { text-align: center; font-size: 16px; font-weight: 700; }
+    .macts { margin-top: 18px; display: flex; gap: 8px; flex-direction: row-reverse; }
+    .fg { display: flex; flex-direction: column; gap: 6px }
+    .fl { font-size: 12px; color: var(--text3); font-weight: 600; letter-spacing: .5px }
+    input[type=text], input[type=date], input[type=url], input[type=number], select, .fta { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--r); color: var(--text); font-family: 'Syne', sans-serif; font-size: 15px; padding: 5px 6px 5px 34px; outline: none; width: 100%; transition: border-color .2s }
+    input:focus, select:focus, .fta:focus { border-color: var(--accent) }
+    .fta { resize: vertical; min-height: 80px; font-size: 13px; font-family: 'JetBrains Mono', monospace; line-height: 1.7 }
+    .cpick { display: flex; gap: 10px; flex-wrap: wrap; padding: 4px 0 }
+    .copt { width: 34px; height: 34px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; transition: all .15s }
+    .copt.sel { border-color: white; transform: scale(1.18) }
+    .co-red { background: #e8565e } .co-oran { background: #f0804b } .co-yel { background: #e8c84a }
+    .co-grn { background: #3ecf8e } .co-blu { background: #4fa7e8 } .co-pur { background: #a57af0 } .co-pnk { background: #e87ac8 }
+    .lcswatch { width: 28px; height: 28px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; transition: all .15s }
+    .lcswatch.sel { border-color: white; transform: scale(1.15) }
+    .btn { margin-top: 11px; padding: 11px 16px; border-radius: var(--r); border: 1px solid var(--border); background: var(--surface2); color: var(--text); font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; transition: all .15s; display: flex; align-items: center; justify-content: center; gap: 6px }
+    .btn:active { opacity: .75 }
+    .btn.pri { background: var(--accent); border-color: var(--accent); color: white; flex: 1 }
+    .btn.full { width: 100% }
+    .btn.dng { margin-top: 1px; border-color: rgba(232,86,94,.4); color: var(--red) }
+
+    .cpiece { position: fixed; width: 8px; height: 8px; z-index: 999; animation: cfal 1.2s ease-in forwards; pointer-events: none }
+    @keyframes cfal { 0% { transform: translateY(0) rotate(0); opacity: 1 } 100% { transform: translateY(100vh) rotate(720deg); opacity: 0 } }
+
+    ::-webkit-scrollbar { width: 4px } ::-webkit-scrollbar-track { background: transparent } ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px }
+    .search-hidden { display: none !important }
+    .smatch { color: var(--green) !important }
+    .pg::-webkit-scrollbar { width: 3px } .lents::-webkit-scrollbar { width: 3px }
+
+    .guide-block { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--r); padding: 14px; display: flex; flex-direction: column; gap: 8px }
+    .guide-block h4 { font-size: 13px; font-weight: 700; color: var(--accent); display: flex; align-items: center; gap: 6px }
+    .guide-block p, .guide-block li { font-size: 12px; color: var(--text2); line-height: 1.7; font-family: 'JetBrains Mono', monospace }
+    .guide-block ul { padding-left: 16px; display: flex; flex-direction: column; gap: 2px }
+    code { background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent) }
+
+    .view-tabs { display: flex; gap: 6px }
+    .vtab { padding: 5px 10px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--text3); font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 600; cursor: pointer; transition: all .15s }
+    .vtab.on { background: var(--accent); border-color: var(--accent); color: white }
+    .vtab:active { opacity: .75 }
+  </style>
 </head>
+
 <body>
-
-<div class="hdr">
-  <button class="ibtn mbtn" onclick="toggleSB()">☰</button>
-  <div class="logo">List<span>Flow</span></div>
-  <span class="hpill" id="hpill">0 listas</span>
-  <div class="hright">
-    <button class="ibtn" onclick="exportJ()" title="Exportar JSON">⬇</button>
-    <button class="ibtn" onclick="importJ()" title="Importar JSON">⬆</button>
-  </div>
-</div>
-
-<div class="body">
-  <div class="overlay" id="ov" onclick="closeSB()"></div>
-  <aside class="sidebar" id="sb">
-    <div class="sb-scroll">
-      <div class="sb-label" style="margin-top:4px">Plugins</div>
-      <div class="pg" id="pg"></div>
-      <div class="sb-label">Minhas listas</div>
-      <div class="lents" id="lents"></div>
-    </div>
-    <div class="sb-foot">
-      <button class="nlbtn" onclick="newList()">＋ Nova lista</button>
-      <button class="guidebtn" onclick="openGuide()">📖 Como criar um plugin</button>
-    </div>
-  </aside>
-
-  <div class="main">
-    <div class="tb" id="tb"></div>
-    <div class="cnt" id="cnt">
-      <div class="empty" id="es">
-        <div class="empty-ico">☑</div>
-        <h2>Sem lista ativa</h2>
-        <p>Crie uma lista pelo menu lateral ou pelo botão abaixo.</p>
-        <button class="btn pri" onclick="newList()" style="margin-top:8px;flex:0;padding:12px 28px">＋ Criar lista</button>
+  <div class="body">
+    <div class="overlay" id="ov" onclick="closeSB()"></div>
+    <aside class="sidebar" id="sb">
+      <div class="sb-section" id="sbSectionPlugins" onmouseenter="_sbExpandir('plugins')" ontouchstart="_sbExpandir('plugins')">
+        <div class="sb-section-header" onclick="_sbExpandir('plugins')">
+          <div class="sb-label">🔌 Plugins <span class="sb-label-count" id="sbPluginCount"></span></div>
+          <span style="font-size:10px;color:var(--text3)" id="sbPluginArrow">▼</span>
+        </div>
+        <div class="sb-section-body"><div class="pg" id="pg"></div></div>
       </div>
-      <div id="lv" style="display:none;flex-direction:column;gap:14px"></div>
-    </div>
-  </div>
-</div>
+      <div class="sb-divider"></div>
+      <div class="sb-section" id="sbSectionListas" onmouseenter="_sbExpandir('listas')" ontouchstart="_sbExpandir('listas')">
+        <div class="sb-section-header" onclick="_sbExpandir('listas')">
+          <div class="sb-label">📋 Listas <span class="sb-label-count" id="hpill">0</span></div>
+          <span style="font-size:10px;color:var(--text3)" id="sbListasArrow">▼</span>
+        </div>
+        <div class="sb-section-body"><div class="lents" id="lents"></div></div>
+      </div>
+      <div class="sb-search-wrap">
+        <input type="text" id="sbSearch" placeholder="🔍 Buscar plugin ou lista..." oninput="filterSB(this.value);toggleSbClear(this)">
+        <button class="sb-clear" id="sbClear" onclick="clearSBSearch()" title="Limpar">✕</button>
+      </div>
+      <div class="sb-foot">
+        <button class="nlbtn" onclick="newList()">＋ Nova lista</button>
+        <button class="guidebtn" onclick="abrirGerenciadorPlugins()" style="border-color:rgba(124,106,247,.35);color:var(--accent)">🔌 Gerenciar plugins</button>
+        <button class="guidebtn" onclick="openGuide()">📖 Como criar um plugin</button>
+      </div>
+    </aside>
 
-<button class="fab" id="fab" onclick="addItem()" style="display:none">＋</button>
-
-<div class="mback" id="mb" onclick="onBD(event)">
-  <div class="msheet" id="ms">
-    <div class="mhandle"></div>
-    <div id="mc"></div>
-  </div>
-</div>
-
-<script>
-// ══════════════════════════════════════════════════════
-//  CORE STATE
-// ══════════════════════════════════════════════════════
-let S = { lists:[], active:null, plugins:{} };
-const save = () => localStorage.setItem('lf4', JSON.stringify(S));
-function load(){ try{ const r=localStorage.getItem('lf4'); if(r) S=JSON.parse(r); }catch(e){} }
-const genId = () => Math.random().toString(36).slice(2,10);
-const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-const getL = () => S.lists.find(l=>l.id===S.active)||null;
-
-// ══════════════════════════════════════════════════════
-//  PLUGIN SYSTEM
-//
-//  Para criar um plugin, use:
-//    reg('meu-plugin', { ...definição... })
-//
-//  Campos disponíveis:
-//    name      → nome exibido na sidebar
-//    icon      → emoji do plugin
-//    desc      → descrição curta
-//    def       → true = ativo por padrão
-//    onToggle(active) → chamado ao ligar/desligar
-//    tb()      → retorna HTML para a toolbar
-//    hdr(list) → retorna HTML no topo da lista (abaixo do título)
-//    pfx(item) → retorna HTML antes do checkbox (ex: ícone de prioridade)
-//    meta(item)→ retorna HTML de badges abaixo do texto do item
-//    abtn(item)→ retorna HTML de botão de ação no final da linha
-//    extra(item)→ retorna HTML extra abaixo do meta (ex: notas)
-//    renderSection(list) → retorna HTML de seção extra (abaixo dos itens)
-// ══════════════════════════════════════════════════════
-const PL = {};
-const reg = (id,def) => PL[id] = { id, ...def };
-const pon = id => !!S.plugins[id];
-const togP = id => {
-  S.plugins[id] = !S.plugins[id];
-  if(PL[id]?.onToggle) PL[id].onToggle(S.plugins[id]);
-  save(); renderAll();
-};
-
-// ══════════════════════════════════════════════════════
-//  PLUGINS EXISTENTES
-// ══════════════════════════════════════════════════════
-
-// ── 1. PROGRESSO ──────────────────────────────────────
-reg('progress', {
-  name:'Barra de Progresso', icon:'📊', desc:'Mostra % de conclusão da lista', def:true,
-  hdr(list){
-    const {d,t}=cp(list.items); const p=t?Math.round(d/t*100):0;
-    return `<div class="prog"><div class="pgbg"><div class="pgfill" style="width:${p}%"></div></div>
-      <div class="pglabel">${d} de ${t} concluídos — ${p}%</div></div>`;
-  }
-});
-
-// ── 2. TAGS ───────────────────────────────────────────
-reg('tags', {
-  name:'Tags coloridas', icon:'🏷️', desc:'Etiquetas coloridas nos itens', def:false,
-  tb(){ return `<button class="tbbtn" onclick="openTagM()">🏷️ Tag</button>`; },
-  meta(item){
-    if(!item.tags?.length) return '';
-    const cm={red:'tred',orange:'toran',yellow:'tyel',green:'tgrn',blue:'tblu',purple:'tpur',pink:'tpnk'};
-    return item.tags.map(t=>`<span class="tag ${cm[t.color]||'tblu'}" onclick="rmTag('${item.id}','${esc(t.label)}')">${esc(t.label)} ✕</span>`).join('');
-  }
-});
-
-// ── 3. PRAZO ──────────────────────────────────────────
-reg('duedate', {
-  name:'Prazo', icon:'📅', desc:'Data limite nos itens', def:false,
-  abtn(item){ return `<button class="iabtn" onclick="setDue('${item.id}')">📅</button>`; },
-  meta(item){
-    if(!item.due) return '';
-    const d=new Date(item.due+'T12:00:00'), t=new Date(); t.setHours(0,0,0,0);
-    const df=Math.round((d-t)/86400000);
-    const cls=df<0?'dover':df<=2?'dsoon':'dnorm';
-    const lb=df<0?`Atrasado ${Math.abs(df)}d`:df===0?'Hoje':df===1?'Amanhã':d.toLocaleDateString('pt-BR');
-    return `<span class="due ${cls}" onclick="setDue('${item.id}')">📅 ${lb}</span>`;
-  }
-});
-
-// ── 4. PRIORIDADE ─────────────────────────────────────
-reg('priority', {
-  name:'Prioridade', icon:'🔥', desc:'Alta / Média / Baixa por item', def:false,
-  pfx(item){
-    const m={high:'🔴',mid:'🟡',low:'🟢',none:'·'};
-    return `<span class="pribadge" title="Prioridade: ${item.priority||'none'}" onclick="cycP('${item.id}')">${m[item.priority||'none']}</span>`;
-  }
-});
-
-// ── 5. BUSCA ──────────────────────────────────────────
-reg('search', {
-  name:'Busca', icon:'🔍', desc:'Filtra itens em tempo real', def:true,
-  tb(){ return `<div class="srch"><span class="sicon">🔍</span><input placeholder="Buscar..." oninput="doSearch(this.value)" id="si"></div>`; }
-});
-
-// ── 6. NOTAS ──────────────────────────────────────────
-reg('notes', {
-  name:'Notas nos itens', icon:'📝', desc:'Nota de texto livre por item', def:false,
-  abtn(item){ return `<button class="iabtn" onclick="togNote('${item.id}')">📝</button>`; },
-  extra(item){
-    if(!item.note && !item._sn) return '';
-    return `<div class="inote" contenteditable="true" onblur="svNote('${item.id}',this.innerText)">${esc(item.note||'')}</div>`;
-  }
-});
-
-// ── 7. ESTIMATIVA ─────────────────────────────────────
-reg('estimate', {
-  name:'Estimativa de Tempo', icon:'⏱️', desc:'Tempo estimado por item', def:false,
-  abtn(item){ return `<button class="iabtn" onclick="setEst('${item.id}')">⏱️</button>`; },
-  meta(item){ return item.estimate?`<span class="estbadge">⏱ ${esc(item.estimate)}</span>`:''; }
-});
-
-// ── 8. CELEBRAÇÃO ─────────────────────────────────────
-reg('celebrate', {
-  name:'Celebração 🎉', icon:'🎉', desc:'Confete ao completar toda a lista', def:false
-});
-
-// ── 9. TEMA CLARO ─────────────────────────────────────
-reg('theme', {
-  name:'Tema Claro', icon:'☀️', desc:'Alterna entre escuro e claro', def:false,
-  onToggle(on){
-    const v=(k,d,l)=>document.documentElement.style.setProperty(k,on?l:d);
-    v('--bg','#0e0e0f','#f2f2f5'); v('--surface','#161618','#ffffff');
-    v('--surface2','#1e1e21','#e8e8ed'); v('--border','#2a2a2e','#d2d2da');
-    v('--text','#e8e8ec','#111116'); v('--text2','#888892','#44444e'); v('--text3','#55555e','#aaaabc');
-  }
-});
-
-// ══════════════════════════════════════════════════════
-//  NOVOS PLUGINS
-// ══════════════════════════════════════════════════════
-
-// ── 10. RECORRÊNCIA ───────────────────────────────────
-reg('recurrence', {
-  name:'Itens Recorrentes', icon:'🔁', desc:'Reseta itens diária/semanalamente', def:false,
-  abtn(item){ return `<button class="iabtn" onclick="setRec('${item.id}')">🔁</button>`; },
-  meta(item){
-    if(!item.recurrence) return '';
-    const labels={daily:'Todo dia',weekly:'Toda semana',monthly:'Todo mês'};
-    return `<span class="recbadge" onclick="setRec('${item.id}')">🔁 ${labels[item.recurrence]||item.recurrence}</span>`;
-  },
-  // Quando a lista é aberta, verifica se itens precisam ser resetados
-  hdr(list){
-    checkRecurrence(list);
-    return '';
-  }
-});
-
-function checkRecurrence(list){
-  const now = new Date();
-  const today = now.toISOString().slice(0,10);
-  const allItems = [];
-  const col = a => a.forEach(i=>{ allItems.push(i); col(i.children||[]); });
-  col(list.items);
-  let changed = false;
-  for(const item of allItems){
-    if(!item.recurrence || !item.checked) continue;
-    const last = item._recLast;
-    if(!last){ item._recLast = today; continue; }
-    let shouldReset = false;
-    if(item.recurrence==='daily' && last < today) shouldReset=true;
-    if(item.recurrence==='weekly'){
-      const d1=new Date(last), d2=new Date(today);
-      shouldReset = (d2-d1)/(1000*60*60*24) >= 7;
-    }
-    if(item.recurrence==='monthly'){
-      const d1=new Date(last), d2=new Date(today);
-      shouldReset = d2.getMonth()!==d1.getMonth() || d2.getFullYear()!==d1.getFullYear();
-    }
-    if(shouldReset){ item.checked=false; item._recLast=today; changed=true; }
-  }
-  if(changed) save();
-}
-
-function setRec(id){
-  const l=getL(); if(!l) return;
-  const item=find(l.items,id);
-  openM('Item Recorrente',`
-    <div class="fg"><div class="fl">Frequência de reset</div>
-      <select id="mrc">
-        <option value="" ${!item?.recurrence?'selected':''}>Sem recorrência</option>
-        <option value="daily" ${item?.recurrence==='daily'?'selected':''}>Todo dia</option>
-        <option value="weekly" ${item?.recurrence==='weekly'?'selected':''}>Toda semana</option>
-        <option value="monthly" ${item?.recurrence==='monthly'?'selected':''}>Todo mês</option>
-      </select>
-    </div>
-    <div style="font-size:12px;color:var(--text3);font-family:'JetBrains Mono',monospace;line-height:1.6">
-      O item será automaticamente desmarcado conforme a frequência escolhida quando você abrir o app.
-    </div>
-  `, ()=>{
-    const v=document.getElementById('mrc')?.value;
-    if(item){ item.recurrence=v||null; item._recLast=new Date().toISOString().slice(0,10); save(); renderCnt(); }
-  });
-}
-
-// ── 11. EXPORT MARKDOWN / CSV ─────────────────────────
-reg('exportmd', {
-  name:'Export Markdown / CSV', icon:'📤', desc:'Exporta lista em Markdown ou CSV', def:false,
-  tb(){ return `<button class="tbbtn" onclick="openExportPanel()">📤 Exportar</button>`; }
-});
-
-function listToMarkdown(items, depth=0){
-  let out='';
-  for(const item of items){
-    const pad='  '.repeat(depth);
-    const cb=item.checked?'[x]':'[ ]';
-    out+=`${pad}- ${cb} ${item.text}\n`;
-    if(item.children?.length) out+=listToMarkdown(item.children, depth+1);
-  }
-  return out;
-}
-
-function listToCSV(items, depth=0){
-  let rows=[];
-  for(const item of items){
-    rows.push([`"${'  '.repeat(depth)+item.text.replace(/"/g,'""')}"`, item.checked?'sim':'não',
-      item.priority||'none', item.due||'', item.estimate||'', `"${(item.tags||[]).map(t=>t.label).join(', ')}"`].join(','));
-    if(item.children?.length) rows=rows.concat(listToCSV(item.children, depth+1));
-  }
-  return rows;
-}
-
-function openExportPanel(){
-  const l=getL(); if(!l) return;
-  const md=`# ${l.name}\n\n`+listToMarkdown(l.items);
-  const csvRows=['Texto,Concluído,Prioridade,Prazo,Estimativa,Tags',...listToCSV(l.items)];
-  const csv=csvRows.join('\n');
-
-  openM('Exportar Lista',`
-    <div class="view-tabs" style="margin-bottom:4px">
-      <button class="vtab on" id="vtmd" onclick="swExport('md')">Markdown</button>
-      <button class="vtab" id="vtcsv" onclick="swExport('csv')">CSV</button>
-    </div>
-    <pre class="export-pre" id="expre">${esc(md)}</pre>
-    <div class="macts">
-      <button class="btn" onclick="copyExport()">📋 Copiar</button>
-      <button class="btn pri" onclick="dlExport()">⬇ Download</button>
-    </div>
-  `, null);
-  window._expData = {md, csv, mode:'md'};
-}
-
-window.swExport = mode => {
-  window._expData.mode = mode;
-  document.getElementById('expre').textContent = mode==='md' ? window._expData.md : window._expData.csv;
-  document.getElementById('vtmd').classList.toggle('on', mode==='md');
-  document.getElementById('vtcsv').classList.toggle('on', mode==='csv');
-};
-window.copyExport = () => {
-  const d=window._expData;
-  navigator.clipboard.writeText(d.mode==='md'?d.md:d.csv).then(()=>alert('Copiado!'));
-};
-window.dlExport = () => {
-  const d=window._expData;
-  const content=d.mode==='md'?d.md:d.csv;
-  const ext=d.mode==='md'?'md':'csv';
-  const l=getL();
-  const b=new Blob([content],{type:'text/plain'});
-  const a=document.createElement('a'); a.href=URL.createObjectURL(b);
-  a.download=`${(l?.name||'lista').replace(/\s+/g,'_')}.${ext}`; a.click();
-};
-
-// ── 12. COR DA LISTA ──────────────────────────────────
-const LIST_COLORS = [
-  {name:'roxo',   hex:'#7c6af7'},
-  {name:'verde',  hex:'#3ecf8e'},
-  {name:'azul',   hex:'#4fa7e8'},
-  {name:'vermelho',hex:'#e8565e'},
-  {name:'laranja',hex:'#f0804b'},
-  {name:'amarelo',hex:'#e8c84a'},
-  {name:'rosa',   hex:'#e87ac8'},
-  {name:'branco', hex:'#888892'},
-];
-
-reg('listcolor', {
-  name:'Cor da Lista', icon:'🎨', desc:'Cor personalizada por lista', def:false,
-  tb(){
-    const l=getL(); if(!l) return '';
-    const c=l.color||'#7c6af7';
-    return `<button class="tbbtn" onclick="openColorPicker()" style="gap:6px">
-      <span style="width:10px;height:10px;border-radius:50%;background:${c};display:inline-block"></span>Cor da lista
-    </button>`;
-  }
-});
-
-function openColorPicker(){
-  const l=getL(); if(!l) return;
-  let sel=l.color||'#7c6af7';
-  openM('Cor da Lista',`
-    <div class="fg"><div class="fl">Escolha uma cor</div>
-      <div class="cpick" id="lcp">
-        ${LIST_COLORS.map(c=>`<div class="lcswatch ${c.hex===sel?'sel':''}" style="background:${c.hex}" data-c="${c.hex}" title="${c.name}" onclick="pickLC(this,'${c.hex}')"></div>`).join('')}
+    <div class="main">
+      <div class="cnt" id="cnt">
+        <div class="empty" id="es">
+          <div class="empty-ico">☑</div>
+          <h2>Sem lista ativa</h2>
+          <p>Crie uma lista pelo menu lateral ou pelo botão abaixo.</p>
+          <button class="btn pri" onclick="newList()" style="margin-top:8px;flex:0;padding:12px 28px">＋ Criar lista</button>
+        </div>
+        <div id="lv" style="display:none;flex-direction:column;gap:14px"></div>
       </div>
     </div>
-  `, ()=>{ l.color=sel; save(); renderAll(); });
-  window.pickLC = (el,c)=>{ sel=c; document.querySelectorAll('.lcswatch').forEach(e=>e.classList.toggle('sel',e.dataset.c===c)); };
-}
+  </div>
 
-// ── 13. LINKS / URLs ──────────────────────────────────
-reg('links', {
-  name:'Links nos itens', icon:'🔗', desc:'Adiciona URLs clicáveis nos itens', def:false,
-  abtn(item){ return `<button class="iabtn" onclick="setLink('${item.id}')">🔗</button>`; },
-  meta(item){
-    if(!item.link) return '';
-    const domain = (()=>{ try{ return new URL(item.link).hostname.replace('www.',''); }catch(e){ return item.link; } })();
-    return `<a class="linkbadge" href="${esc(item.link)}" target="_blank" rel="noopener">🔗 ${esc(domain)}</a>`;
-  }
-});
-
-function setLink(id){
-  const l=getL(); if(!l) return;
-  const item=find(l.items,id);
-  openM('Link / URL',`
-    <div class="fg"><div class="fl">URL</div>
-      <input type="url" id="mlk" placeholder="https://exemplo.com" value="${esc(item?.link||'')}">
+  <button class="fab" id="fab" onclick="addItem()" style="display:none">＋</button>
+  <div class="tb" id="tb"></div>
+  <div class="mback" id="mb" onclick="onBD(event)">
+    <div class="msheet" id="ms"><div class="mhandle"></div><div id="mc"></div></div>
+  </div>
+  <div class="hdr">
+    <button class="ibtn mbtn" onclick="toggleSB()">☰</button>
+    <div class="logo">List<span>Flow</span></div>
+    <div class="hright">
+      <button class="ibtn" onclick="exportJ()" title="Exportar JSON">⬆</button>
+      <button class="ibtn" onclick="importJ()" title="Importar JSON">⬇</button>
     </div>
-    ${item?.link?`<button class="btn dng full" onclick="clrLink('${id}')">Remover link</button>`:''}
-  `, ()=>{
-    const v=document.getElementById('mlk')?.value.trim();
-    if(item){ item.link=v||null; save(); renderCnt(); }
-  });
-}
-function clrLink(id){ const l=getL();const item=find(l.items,id);if(item){item.link=null;save();closeM();renderCnt();} }
+  </div>
 
-// ── 14. VISTA KANBAN ──────────────────────────────────
-reg('kanban', {
-  name:'Vista Kanban', icon:'📋', desc:'Visualiza itens em colunas de status', def:false,
-  tb(){ return `<div class="view-tabs"><button class="vtab ${S._view==='list'?'on':''}" onclick="setView('list')">☰ Lista</button><button class="vtab ${S._view==='kanban'?'on':''}" onclick="setView('kanban')">📋 Kanban</button></div>`; }
-});
+  <script>
+    // ══════════════════════════════════════════════════════
+    //  CORE STATE
+    // ══════════════════════════════════════════════════════
+    let S = { lists: [], active: null, plugins: {} };
+    const save = () => localStorage.setItem('lf4', JSON.stringify(S));
+    function load() { try { const r = localStorage.getItem('lf4'); if (r) S = JSON.parse(r); } catch (e) { } }
+    const genId = () => Math.random().toString(36).slice(2, 10);
+    const esc = s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    const getL = () => S.lists.find(l => l.id === S.active) || null;
 
-function setView(v){ S._view=v; renderCnt(); }
+    // ══════════════════════════════════════════════════════
+    //  HELPERS GENÉRICOS — facilitam criação de novos plugins
+    // ══════════════════════════════════════════════════════
 
-function renderKanban(list){
-  const all=[];
-  const col=a=>a.forEach(i=>{ all.push(i); col(i.children||[]); });
-  col(list.items);
+    // ── 1. IndexedDB genérico ─────────────────────────────
+    function criarDB(nomeDB, nomeStore) {
+      let db = null;
+      const init = () => new Promise((res, rej) => {
+        if (db) { res(); return; }
+        const req = indexedDB.open(nomeDB, 1);
+        req.onupgradeneeded = e => {
+          if (!e.target.result.objectStoreNames.contains(nomeStore))
+            e.target.result.createObjectStore(nomeStore, { keyPath: 'id' });
+        };
+        req.onsuccess = e => { db = e.target.result; res(); };
+        req.onerror = e => rej(e);
+      });
+      return {
+        async salvar(id, blob) {
+          await init();
+          return new Promise((res, rej) => {
+            const tx = db.transaction(nomeStore, 'readwrite');
+            tx.objectStore(nomeStore).put({ id, blob });
+            tx.oncomplete = res; tx.onerror = rej;
+          });
+        },
+        async carregar(id) {
+          await init();
+          return new Promise((res, rej) => {
+            const tx = db.transaction(nomeStore, 'readonly');
+            const r = tx.objectStore(nomeStore).get(id);
+            r.onsuccess = e => res(e.target.result?.blob || null);
+            r.onerror = rej;
+          });
+        },
+        async deletar(id) {
+          await init();
+          return new Promise((res, rej) => {
+            const tx = db.transaction(nomeStore, 'readwrite');
+            tx.objectStore(nomeStore).delete(id);
+            tx.oncomplete = res; tx.onerror = rej;
+          });
+        }
+      };
+    }
 
-  const todo  = all.filter(i=>!i.checked && i.priority!=='high');
-  const urgent= all.filter(i=>!i.checked && i.priority==='high');
-  const done  = all.filter(i=>i.checked);
+    const _GravDB      = criarDB('listflow_audios',        'audios');
+    const _AudInlineDB = criarDB('listflow_audio_inline',  'blobs');
 
-  const card = i => `<div class="kanban-card ${i.checked?'done-card':''}" onclick="togChk('${i.id}',${!i.checked})">
-    ${esc(i.text)}
-    ${i.due?`<div style="font-size:10px;color:var(--text3);margin-top:4px;font-family:'JetBrains Mono',monospace">📅 ${i.due}</div>`:''}
-  </div>`;
+    // ── 2. Tela separada genérica ─────────────────────────
+    function criarTelaPlugin({ id, icone, titulo, onAbrir, onFechar }) {
+      if (!document.getElementById(id + 'Screen')) {
+        const s = document.createElement('div');
+        s.id = id + 'Screen';
+        s.style.cssText = 'flex:1;overflow-y:auto;overflow-x:hidden;padding:16px;flex-direction:column;gap:16px;background:var(--bg);box-sizing:border-box;display:none;';
+        document.querySelector('.body').appendChild(s);
+      }
+      if (!document.getElementById(id + 'Btn')) {
+        const b = document.createElement('button');
+        b.id = id + 'Btn'; b.title = titulo; b.textContent = icone;
+        b.className = 'ibtn';
+        b.onclick = () => alternarTelaPlugin(id, onAbrir, onFechar);
+        document.querySelector('.hright').prepend(b);
+      }
+    }
 
-  return `<div class="kanban-wrap">
-    <div class="kanban-col">
-      <div class="kanban-hdr">🔴 Urgente <span style="margin-left:auto;font-size:11px;color:var(--text3)">${urgent.length}</span></div>
-      <div class="kanban-body">${urgent.map(card).join('')||'<div style="font-size:12px;color:var(--text3);padding:4px">Vazio</div>'}</div>
-    </div>
-    <div class="kanban-col">
-      <div class="kanban-hdr">📝 A fazer <span style="margin-left:auto;font-size:11px;color:var(--text3)">${todo.length}</span></div>
-      <div class="kanban-body">${todo.map(card).join('')||'<div style="font-size:12px;color:var(--text3);padding:4px">Vazio</div>'}</div>
-    </div>
-    <div class="kanban-col">
-      <div class="kanban-hdr">✅ Concluído <span style="margin-left:auto;font-size:11px;color:var(--text3)">${done.length}</span></div>
-      <div class="kanban-body">${done.map(card).join('')||'<div style="font-size:12px;color:var(--text3);padding:4px">Vazio</div>'}</div>
-    </div>
-  </div>`;
-}
+    function alternarTelaPlugin(id, onAbrir, onFechar) {
+      const s   = document.getElementById(id + 'Screen');
+      const m   = document.querySelector('.main');
+      const btn = document.getElementById(id + 'Btn');
+      const fab = document.getElementById('fab');
+      if (!s || !m) return;
 
-// ══════════════════════════════════════════════════════
-//  GUIA: COMO CRIAR UM PLUGIN
-// ══════════════════════════════════════════════════════
-function openGuide(){
-  openM('📖 Como criar um plugin',`
+      const isOpen = s.style.display === 'flex';
+      if (isOpen) {
+        s.style.display = 'none'; m.style.display = 'flex';
+        if (btn) { btn.style.background = ''; btn.style.color = ''; }
+        fab.style.display = getL() ? 'flex' : 'none';
+        if (onFechar) onFechar();
+      } else {
+        document.querySelectorAll('[id$="Screen"]').forEach(el => {
+          if (el.id !== id + 'Screen' && el.style.display === 'flex') {
+            el.style.display = 'none';
+            const otherId = el.id.replace('Screen', '');
+            const ob = document.getElementById(otherId + 'Btn');
+            if (ob) { ob.style.background = ''; ob.style.color = ''; }
+          }
+        });
+        m.style.display = 'none'; s.style.display = 'flex';
+        if (btn) { btn.style.background = 'var(--accent)'; btn.style.color = 'white'; }
+        fab.style.display = 'none';
+        if (onAbrir) onAbrir();
+      }
+    }
+
+    function telaPluginAberta(id) {
+      const s = document.getElementById(id + 'Screen');
+      return s && s.style.display === 'flex';
+    }
+
+    function renderizarTela(id, html) {
+      const s = document.getElementById(id + 'Screen');
+      if (s) s.innerHTML = html;
+    }
+
+    // ── 3. CSS genérico ───────────────────────────────────
+    function injetarCSS(id, css) {
+      if (document.getElementById('css-' + id)) return;
+      const s = document.createElement('style');
+      s.id = 'css-' + id; s.textContent = css;
+      document.head.appendChild(s);
+    }
+
+    // ── 4. Toast genérico ─────────────────────────────────
+    function toast(msg, tipo = 'info', duracao = 2500) {
+      document.getElementById('_toastEl')?.remove();
+      const cores = {
+        info:  'border:1px solid var(--accent);color:var(--text);background:var(--surface)',
+        ok:    'border:1px solid rgba(62,207,142,.4);color:var(--green);background:rgba(62,207,142,.12)',
+        erro:  'border:1px solid rgba(232,86,94,.4);color:var(--red);background:rgba(232,86,94,.1)',
+        aviso: 'border:1px solid rgba(232,200,74,.4);color:var(--yellow);background:rgba(232,200,74,.1)',
+      };
+      const t = document.createElement('div');
+      t.id = '_toastEl';
+      t.style.cssText = `position:fixed;top:70px;left:50%;transform:translateX(-50%);
+        padding:10px 20px;border-radius:99px;font-family:'Syne',sans-serif;
+        font-size:14px;font-weight:700;z-index:9000;white-space:nowrap;
+        box-shadow:0 4px 20px rgba(0,0,0,.3);${cores[tipo] || cores.info}`;
+      t.textContent = msg;
+      document.body.appendChild(t);
+      setTimeout(() => t.remove(), duracao);
+    }
+
+    // ══════════════════════════════════════════════════════
+    //  PLUGIN SYSTEM
+    // ══════════════════════════════════════════════════════
+    const PL = {};
+    const reg = (id, def) => PL[id] = { id, ...def };
+    const pon = id => !!S.plugins[id];
+    const togP = id => {
+      S.plugins[id] = !S.plugins[id];
+      if (PL[id]?.onToggle) PL[id].onToggle(S.plugins[id]);
+      save(); renderAll();
+    };
+
+    // ══════════════════════════════════════════════════════
+    //  PLUGINS EXISTENTES
+    // ══════════════════════════════════════════════════════
+
+    reg('progress', {
+      name: 'Barra de Progresso', icon: '📊', desc: 'Mostra % de conclusão da lista', def: true,
+      hdr(list) {
+        const { d, t } = cp(list.items); const p = t ? Math.round(d / t * 100) : 0;
+        return `<div class="prog"><div class="pgbg"><div class="pgfill" style="width:${p}%"></div></div><div class="pglabel">${d} de ${t} concluídos — ${p}%</div></div>`;
+      }
+    });
+
+    reg('tags', {
+      name: 'Tags coloridas', icon: '🏷️', desc: 'Etiquetas coloridas nos itens', def: false,
+      tb() { return `<button class="tbbtn" onclick="openTagM()">🏷️ Tag</button>`; },
+      meta(item) {
+        if (!item.tags?.length) return '';
+        const cm = { red: 'tred', orange: 'toran', yellow: 'tyel', green: 'tgrn', blue: 'tblu', purple: 'tpur', pink: 'tpnk' };
+        return item.tags.map(t => `<span class="tag ${cm[t.color] || 'tblu'}" onclick="rmTag('${item.id}','${esc(t.label)}')">${esc(t.label)} ✕</span>`).join('');
+      }
+    });
+
+    reg('duedate', {
+      name: 'Prazo', icon: '📅', desc: 'Data limite nos itens', def: false,
+      abtn(item) { return `<button class="iabtn" onclick="setDue('${item.id}')">📅</button>`; },
+      meta(item) {
+        if (!item.due) return '';
+        const d = new Date(item.due + 'T12:00:00'), t = new Date(); t.setHours(0, 0, 0, 0);
+        const df = Math.round((d - t) / 86400000);
+        const cls = df < 0 ? 'dover' : df <= 2 ? 'dsoon' : 'dnorm';
+        const lb = df < 0 ? `Atrasado ${Math.abs(df)}d` : df === 0 ? 'Hoje' : df === 1 ? 'Amanhã' : d.toLocaleDateString('pt-BR');
+        return `<span class="due ${cls}" onclick="setDue('${item.id}')">📅 ${lb}</span>`;
+      }
+    });
+
+    reg('priority', {
+      name: 'Prioridade', icon: '🔥', desc: 'Alta / Média / Baixa por item', def: false,
+      pfx(item) {
+        const m = { high: '🔴', mid: '🟡', low: '🟢', none: '·' };
+        return `<span class="pribadge" title="Prioridade: ${item.priority || 'none'}" onclick="cycP('${item.id}')">${m[item.priority || 'none']}</span>`;
+      }
+    });
+
+    reg('search', {
+      name: 'Busca', icon: '🔍', desc: 'Filtra itens em tempo real', def: true,
+      tb() { return `<div class="srch"><span class="sicon">🔍</span><input placeholder="Buscar..." oninput="doSearch(this.value);toggleSrchClear(this)" id="si"><button class="srch-clear" id="srchClear" onclick="clearSearch()" title="Limpar">✕</button></div>`; }
+    });
+
+    reg('notes', {
+      name: 'Notas nos itens', icon: '📝', desc: 'Nota de texto livre por item', def: false,
+      abtn(item) { return `<button class="iabtn" onclick="togNote('${item.id}')">📝</button>`; },
+      extra(item) {
+        if (!item.note && !item._sn) return '';
+        return `<div class="inote" contenteditable="true" onblur="svNote('${item.id}',this.innerText)">${esc(item.note || '')}</div>`;
+      }
+    });
+
+    reg('estimate', {
+      name: 'Estimativa de Tempo', icon: '⏱️', desc: 'Tempo estimado por item', def: false,
+      abtn(item) { return `<button class="iabtn" onclick="setEst('${item.id}')">⏱️</button>`; },
+      meta(item) { return item.estimate ? `<span class="estbadge">⏱ ${esc(item.estimate)}</span>` : ''; }
+    });
+
+    reg('celebrate', { name: 'Celebração 🎉', icon: '🎉', desc: 'Confete ao completar toda a lista', def: false });
+
+    reg('theme', {
+      name: 'Tema Claro', icon: '☀️', desc: 'Alterna entre escuro e claro', def: false,
+      onToggle(on) {
+        const v = (k, d, l) => document.documentElement.style.setProperty(k, on ? l : d);
+        v('--bg', '#0e0e0f', '#f2f2f5'); v('--surface', '#161618', '#ffffff');
+        v('--surface2', '#1e1e21', '#e8e8ed'); v('--border', '#2a2a2e', '#d2d2da');
+        v('--text', '#e8e8ec', '#111116'); v('--text2', '#888892', '#44444e'); v('--text3', '#55555e', '#aaaabc');
+      }
+    });
+
+    // ══════════════════════════════════════════════════════
+    //  GUIA
+    // ══════════════════════════════════════════════════════
+    function openGuide() {
+      openM('📖 Como criar um plugin', `
     <div style="display:flex;flex-direction:column;gap:12px">
-
       <div class="guide-block">
-        <h4>⚡ Estrutura básica</h4>
-        <p>Adicione este bloco antes da linha <code>// ── BOOT ──</code> no HTML:</p>
-        <pre style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--accent);overflow-x:auto;margin-top:4px">reg('meu-plugin', {
-  name: 'Meu Plugin',
-  icon: '⭐',
-  desc: 'O que ele faz',
-  def:  false,  // true = ativo por padrão
-});</pre>
+        <h4>⚡ Plugin simples (sem tela)</h4>
+        <pre style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--accent);overflow-x:auto">reg('meu-plugin', {
+  name: 'Meu Plugin', icon: '⭐',
+  desc: 'O que ele faz', def: false,
+  abtn(item) { return \`&lt;button class="iabtn"
+    onclick="minhaAcao('\${item.id}')">⭐&lt;/button>\`; },
+  meta(item) { return item.meuDado ? item.meuDado : ''; }
+});
+function minhaAcao(id) { /* ... */ }</pre>
       </div>
-
       <div class="guide-block">
-        <h4>🎛️ Campos disponíveis</h4>
-        <ul>
-          <li><code>tb()</code> → botão na toolbar</li>
-          <li><code>hdr(list)</code> → HTML no topo da lista</li>
-          <li><code>pfx(item)</code> → ícone antes do checkbox</li>
-          <li><code>meta(item)</code> → badges abaixo do texto</li>
-          <li><code>abtn(item)</code> → botão de ação no item</li>
-          <li><code>extra(item)</code> → área extra abaixo do meta</li>
-          <li><code>onToggle(on)</code> → ao ativar/desativar</li>
-        </ul>
-      </div>
-
-      <div class="guide-block">
-        <h4>💾 Salvar dados no item</h4>
-        <p>Use <code>item.meuCampo</code> livremente. O sistema salva tudo automaticamente.</p>
-        <p style="margin-top:4px">Exemplo: <code>item.rating = 5</code> e depois leia com <code>item.rating</code>.</p>
-      </div>
-
-      <div class="guide-block">
-        <h4>🗃️ Dados globais</h4>
-        <p>Salve dados no objeto <code>S</code> (state global).</p>
-        <p style="margin-top:4px">Exemplo: <code>S.meuDado = 'valor'</code></p>
-        <p>Depois chame <code>save()</code> para persistir.</p>
-      </div>
-
-      <div class="guide-block">
-        <h4>🔔 Ações e eventos</h4>
-        <p>Crie funções globais com <code>function minhaAcao(){...}</code> e chame nos botões com <code>onclick="minhaAcao()"</code>.</p>
-        <p style="margin-top:4px">Para abrir o modal use: <code>openM('Título', htmlBody, callbackAoConfirmar)</code>.</p>
-        <p style="margin-top:4px">Para re-renderizar: <code>renderCnt()</code> ou <code>renderAll()</code>.</p>
-      </div>
-
-      <div class="guide-block">
-        <h4>📋 Exemplo completo — plugin "Estrelas"</h4>
-        <pre style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text2);overflow-x:auto;line-height:1.7">reg('stars', {
-  name: 'Avaliação ⭐',
-  icon: '⭐',
-  desc: 'Dê estrelas aos itens',
-  def: false,
-
-  // Botão que aparece em cada item
-  abtn(item) {
-    return \`&lt;button class="iabtn"
-      onclick="setStars('\${item.id}')">⭐&lt;/button>\`;
+        <h4>🖥️ Plugin com tela própria (usando helpers)</h4>
+        <pre style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text2);overflow-x:auto;line-height:1.7">reg('meuPlugin', {
+  name: 'Meu Plugin', icon: '⭐',
+  desc: 'Plugin com tela', def: false,
+  tb() {
+    return pon('meuPlugin')
+      ? \`&lt;button class="tbbtn"
+          onclick="alternarTelaPlugin('meuPlugin',_render)">
+          ⭐ Abrir&lt;/button>\`
+      : '';
   },
-
-  // Badge exibido abaixo do texto
-  meta(item) {
-    if(!item.stars) return '';
-    return '⭐'.repeat(item.stars);
+  onToggle(on) {
+    if (on) {
+      injetarCSS('meuPlugin', \`.meu-css { color: red }\`);
+      criarTelaPlugin({
+        id: 'meuPlugin', icone: '⭐',
+        titulo: 'Meu Plugin',
+        onAbrir: _render,
+      });
+    } else {
+      alternarTelaPlugin('meuPlugin');
+      document.getElementById('meuPluginBtn')?.remove();
+    }
   }
 });
-
-function setStars(id) {
-  const l = getL();
-  const item = find(l.items, id);
-  openM('Avaliar item', \`
-    &lt;div class="fg">
-      &lt;div class="fl">Estrelas (1-5)&lt;/div>
-      &lt;input type="number" id="mst"
-        min="1" max="5"
-        value="\${item?.stars||3}">
-    &lt;/div>
-  \`, () => {
-    const v = +document.getElementById('mst').value;
-    if(item) { item.stars = v; save(); renderCnt(); }
-  });
+function _render() {
+  renderizarTela('meuPlugin', \`&lt;h2>Olá!&lt;/h2>\`);
 }</pre>
       </div>
+      <div class="guide-block">
+        <h4>💾 Salvar arquivos grandes (IndexedDB)</h4>
+        <pre style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text2);overflow-x:auto;line-height:1.7">// Cria banco (uma linha!)
+const MeuDB = criarDB('meu_banco', 'arquivos');
 
-    </div>
-  `, null);
-}
+// Salvar
+await MeuDB.salvar('meu-id', blob);
 
-// ══════════════════════════════════════════════════════
-//  HELPERS DO CORE
-// ══════════════════════════════════════════════════════
-const mkItem = t => ({id:genId(),text:t,checked:false,collapsed:false,children:[],tags:[],due:null,priority:'none',note:'',estimate:'',recurrence:null,link:null});
-function find(items,id){ for(const i of items){ if(i.id===id) return i; if(i.children){ const f=find(i.children,id); if(f) return f; } } return null; }
-function remove(items,id){ for(let i=0;i<items.length;i++){ if(items[i].id===id){items.splice(i,1);return true;} if(items[i].children&&remove(items[i].children,id)) return true; } return false; }
-function getpar(items,id,par=null){ for(const i of items){ if(i.id===id) return par; if(i.children){ const f=getpar(i.children,id,i); if(f!==undefined) return f; } } }
-function cp(items){ let d=0,t=0; const w=a=>{for(const i of(a||[])){t++;if(i.checked)d++;w(i.children)}}; w(items); return{d,t}; }
+// Carregar
+const blob = await MeuDB.carregar('meu-id');
 
-function parseT(text){
-  const lines=text.split('\n').filter(l=>l.trim()), root=[], stack=[{ch:root,ind:-1}];
-  for(const line of lines){
-    const raw=line.replace(/^[\s\t]*[-*+]?\s*(\[[xX ]\])?\s*/,'');
-    const checked=/\[[xX]\]/.test(line);
-    const ind=line.search(/\S/);
-    const item=mkItem(raw.trim()); item.checked=checked;
-    while(stack.length>1&&stack[stack.length-1].ind>=ind) stack.pop();
-    stack[stack.length-1].ch.push(item);
-    stack.push({ch:item.children,ind});
-  }
-  return root;
-}
+// Deletar
+await MeuDB.deletar('meu-id');</pre>
+      </div>
+    </div>`, null);
+    }
 
-// ══════════════════════════════════════════════════════
-//  RENDER
-// ══════════════════════════════════════════════════════
-function renderAll(){ renderSB(); renderTB(); renderCnt(); }
+    // ══════════════════════════════════════════════════════
+    //  HELPERS DO CORE
+    // ══════════════════════════════════════════════════════
+    const mkItem = t => ({ id: genId(), text: t, checked: false, collapsed: false, children: [], tags: [], due: null, priority: 'none', note: '', estimate: '', recurrence: null, link: null });
+    function find(items, id) { for (const i of items) { if (i.id === id) return i; if (i.children) { const f = find(i.children, id); if (f) return f; } } return null; }
+    function remove(items, id) { for (let i = 0; i < items.length; i++) { if (items[i].id === id) { items.splice(i, 1); return true; } if (items[i].children && remove(items[i].children, id)) return true; } return false; }
+    function getpar(items, id, par = null) { for (const i of items) { if (i.id === id) return par; if (i.children) { const f = getpar(i.children, id, i); if (f !== undefined) return f; } } }
+    function cp(items) { let d = 0, t = 0; const w = a => { for (const i of (a || [])) { t++; if (i.checked) d++; w(i.children) } }; w(items); return { d, t }; }
 
-function renderSB(){
-  document.getElementById('pg').innerHTML = Object.values(PL).map(p=>`
-    <div class="prow ${pon(p.id)?'on':''}" onclick="togP('${p.id}')">
-      <span class="picon">${p.icon}</span>
-      <div class="pinfo"><div class="pname">${p.name}</div><div class="pdesc">${p.desc}</div></div>
-      <div class="tpill"></div>
-    </div>`).join('');
+    function parseT(text) {
+      const lines = text.split('\n').filter(l => l.trim()), root = [], stack = [{ ch: root, ind: -1 }];
+      for (const line of lines) {
+        const raw = line.replace(/^[\s\t]*[-*+]?\s*(\[[xX ]\])?\s*/, '');
+        const checked = /\[[xX]\]/.test(line);
+        const ind = line.search(/\S/);
+        const item = mkItem(raw.trim()); item.checked = checked;
+        while (stack.length > 1 && stack[stack.length - 1].ind >= ind) stack.pop();
+        stack[stack.length - 1].ch.push(item);
+        stack.push({ ch: item.children, ind });
+      }
+      return root;
+    }
 
-  document.getElementById('lents').innerHTML = S.lists.map(l=>{
-    const {d,t}=cp(l.items); const on=l.id===S.active;
-    const c=l.color||'#3ecf8e';
-    return `<div class="lent ${on?'on':''}" onclick="selL('${l.id}');closeSB()">
-      <div class="ldot" style="background:${c}"></div>
-      <div class="lname">${esc(l.name)}</div>
-      <div class="lcnt">${d}/${t}</div>
-      <button class="ldel" onclick="event.stopPropagation();delL('${l.id}')">✕</button>
-    </div>`;
-  }).join('');
+    // ══════════════════════════════════════════════════════
+    //  RENDER
+    // ══════════════════════════════════════════════════════
+    function renderAll() { renderSB(); renderTB(); renderCnt(); }
 
-  document.getElementById('hpill').textContent = `${S.lists.length} lista${S.lists.length!==1?'s':''}`;
-}
+    function renderSB() {
+      document.getElementById('pg').innerHTML = Object.values(PL).map(p => `
+        <div class="prow ${pon(p.id) ? 'on' : ''}" onclick="togP('${p.id}')">
+          <span class="picon">${p.icon}</span>
+          <div class="pinfo"><div class="pname">${p.name}</div><div class="pdesc">${p.desc}</div></div>
+          <div class="tpill"></div>
+        </div>`).join('');
+      document.getElementById('lents').innerHTML = S.lists.map(l => {
+        const { d, t } = cp(l.items); const on = l.id === S.active;
+        const c = l.color || '#3ecf8e';
+        return `<div class="lent ${on ? 'on' : ''}" onclick="selL('${l.id}');closeSB()">
+          <div class="ldot" style="background:${c}"></div>
+          <div class="lname">${esc(l.name)}</div>
+          <div class="lcnt">${d}/${t}</div>
+          <button class="ldel" onclick="event.stopPropagation();confirmarDel('lista','${l.id}')">✕</button>
+        </div>`;
+      }).join('');
+      document.getElementById('hpill').textContent = `${S.lists.length} lista${S.lists.length !== 1 ? 's' : ''}`;
+    }
 
-function renderTB(){
-  const parts=[`<button class="tbbtn pri" onclick="addItem()">＋ Item</button>`];
-  Object.values(PL).forEach(p=>{
-    if(pon(p.id)&&p.tb){ const h=p.tb(); if(h){ parts.push('<div class="tbsep"></div>'); parts.push(h); } }
-  });
-  document.getElementById('tb').innerHTML=parts.join('');
-}
+    function filterSB(q) {
+      const qu = (q || '').toLowerCase().trim();
+      let visP = 0;
+      document.querySelectorAll('#pg .prow').forEach(row => {
+        const nome = row.querySelector('.pname')?.textContent?.toLowerCase() || '';
+        const desc = row.querySelector('.pdesc')?.textContent?.toLowerCase() || '';
+        const hide = qu && !nome.includes(qu) && !desc.includes(qu);
+        row.classList.toggle('sb-hidden', hide);
+        if (!hide) visP++;
+      });
+      const pc = document.getElementById('sbPluginCount');
+      if (pc) pc.textContent = qu ? `${visP} encontrados` : '';
+      document.querySelectorAll('#lents .lent').forEach(row => {
+        const nome = row.querySelector('.lname')?.textContent?.toLowerCase() || '';
+        row.classList.toggle('sb-hidden', qu && !nome.includes(qu));
+      });
+    }
 
-function renderCnt(){
-  const list=getL();
-  const es=document.getElementById('es'), lv=document.getElementById('lv'), fab=document.getElementById('fab');
-  if(!list){ es.style.display='flex'; lv.style.display='none'; fab.style.display='none'; return; }
-  es.style.display='none'; lv.style.display='flex'; fab.style.display='flex';
-  // Quiz mode — substitui toda a view
-  if(pon('quiz') && S._quizAtivo){
-    es.style.display='none'; lv.style.display='flex'; fab.style.display='none';
-    lv.innerHTML=''; // limpa
-    // Header mínimo com nome da lista
-    const qhdr=document.createElement('div');
-    qhdr.innerHTML=`<div style="font-size:13px;font-weight:700;color:var(--text3);margin-bottom:4px">${esc(list.name)}</div>`;
-    lv.appendChild(qhdr);
-    const qview=document.createElement('div');
-    qview.innerHTML=renderQuiz();
-    lv.appendChild(qview);
-    return; // não renderiza a lista normal
-  }
-      // Focus mode — substitui a view normal
-  if(pon('focus') && S._focusAtivo){
-    es.style.display='none'; lv.style.display='flex'; fab.style.display='none';
-    lv.innerHTML='';
-    const fhdr=document.createElement('div');
-    fhdr.innerHTML=`<div style="font-size:13px;font-weight:700;color:var(--text3);margin-bottom:4px">${esc(list.name)}</div>`;
-    lv.appendChild(fhdr);
-    const fview=document.createElement('div');
-    fview.innerHTML=renderFocus(list);
-    lv.appendChild(fview);
-    return;
-  }
-  lv.innerHTML='';
+    function renderTB() {
+      const parts = [
+        `<button class="tbbtn pri" onclick="addItem()">＋ Item</button>`,
+        `<div class="tbsep"></div>`,
+        `<button class="tbbtn" onclick="collapseAll()">⏫</button>`,
+        `<button class="tbbtn" onclick="resetAll()">🔁</button>`
+      ];
+      Object.values(PL).forEach(p => {
+        if (pon(p.id) && p.tb) { const h = p.tb(); if (h) { parts.push('<div class="tbsep"></div>'); parts.push(h); } }
+      });
+      document.getElementById('tb').innerHTML = parts.join('');
+    }
 
-  // Header
-  const hdr=document.createElement('div'); hdr.className='lhdr';
-  let hdrHtml=`<div class="ltrow"><input class="ltinput" value="${esc(list.name)}" onchange="renL('${list.id}',this.value)" onblur="renL('${list.id}',this.value)"></div>`;
-  Object.values(PL).forEach(p=>{ if(pon(p.id)&&p.hdr){ const h=p.hdr(list); if(h) hdrHtml+=h; } });
-  hdr.innerHTML=hdrHtml;
-  lv.appendChild(hdr);
+    function collapseAll() {
+      const l = getL(); if (!l) return;
+      const walk = arr => arr.forEach(i => { i.collapsed = true; if (i.children?.length) walk(i.children); });
+      walk(l.items); save(); renderCnt();
+    }
 
-  // Kanban view
-  if(pon('kanban') && S._view==='kanban'){
-    const kb=document.createElement('div');
-    kb.innerHTML=renderKanban(list);
-    lv.appendChild(kb);
-    return;
-  }
+    function resetAll() {
+      const l = getL(); if (!l) return;
+      const walk = arr => arr.forEach(i => { i.checked = false; if (i.children?.length) walk(i.children); });
+      walk(l.items); save(); renderCnt();
+    }
 
-  // Import area
-  const imp=document.createElement('details'); imp.className='import';
-  imp.innerHTML=`<summary>📋 Importar por texto</summary>
-    <div class="import-body">
-      <textarea id="ita" placeholder="Um item por linha. Indente para sub-itens:
+    function renderCnt() {
+      const list = getL();
+      const es = document.getElementById('es'), lv = document.getElementById('lv'), fab = document.getElementById('fab');
+      if (!list) { es.style.display = 'flex'; lv.style.display = 'none'; fab.style.display = 'none'; return; }
+      es.style.display = 'none'; lv.style.display = 'flex';
+      lv.innerHTML = '';
+      fab.style.display = 'flex';
+      for (const p of Object.values(PL)) {
+        if (pon(p.id) && p.onRenderCnt) {
+          const took = p.onRenderCnt(lv, list);
+          if (took) { fab.style.display = 'none'; return; }
+        }
+      }
+      const hdr = document.createElement('div'); hdr.className = 'lhdr';
+      let hdrHtml = `<div class="ltrow"><input class="ltinput" value="${esc(list.name)}" onchange="renL('${list.id}',this.value)" onblur="renL('${list.id}',this.value)"></div>`;
+      Object.values(PL).forEach(p => { if (pon(p.id) && p.hdr) { const h = p.hdr(list); if (h) hdrHtml += h; } });
+      hdr.innerHTML = hdrHtml;
+      lv.appendChild(hdr);
+      let tookTop = false;
+      for (const p of Object.values(PL)) {
+        if (pon(p.id) && p.onRenderTop) { const took = p.onRenderTop(lv, list); if (took) { tookTop = true; break; } }
+      }
+      if (!tookTop) {
+        const imp = document.createElement('details'); imp.className = 'import';
+        imp.innerHTML = `<summary>📋 Importar por texto</summary>
+          <div class="import-body">
+            <textarea id="ita" placeholder="Um item por linha. Indente para sub-itens:
 - Tarefa principal
   - Sub-tarefa
-    - Sub-sub-tarefa
 [x] Item já marcado"></textarea>
-      <div class="import-acts">
-        <button class="btn pri" style="flex:1" onclick="doImport()">Importar</button>
-        <button class="btn" onclick="document.getElementById('ita').value=''">Limpar</button>
-      </div>
-      <div class="import-hint">Prefixos: -, *, + • [x] = marcado • Espaços = aninhamento</div>
-    </div>`;
-  lv.appendChild(imp);
-
-  // Tree
-  const tree=document.createElement('div'); tree.id='it';
-  rTree(list.items,tree);
-  lv.appendChild(tree);
-  // Seção de orçamento (plugins com renderSection)
-  Object.values(PL).forEach(p=>{
-    if(pon(p.id)&&p.renderSection){ const h=p.renderSection(list); if(h){ const d=document.createElement('div'); d.innerHTML=h; lv.appendChild(d); } }
-  });
-}
-
-function rTree(items,cont){
-  for(const item of items){
-    const blk=document.createElement('div'); blk.className='iblock';
-    const row=document.createElement('div'); row.className='irow'; row.dataset.id=item.id;
-    const hk=!!item.children?.length;
-
-    let cbcls='';
-    if(!item.checked&&hk){ const{d,t}=cp(item.children); if(d>0&&d<t) cbcls='par'; }
-
-    let pfx=''; Object.values(PL).forEach(p=>{ if(pon(p.id)&&p.pfx) pfx+=p.pfx(item)||''; });
-    let abtns=`<button class="iabtn" title="Sub-item" onclick="addSub('${item.id}')">⊕</button>`;
-    Object.values(PL).forEach(p=>{ if(pon(p.id)&&p.abtn) abtns+=p.abtn(item)||''; });
-    abtns+=`<button class="iabtn" onclick="delItem('${item.id}')" style="color:var(--red);opacity:.7">✕</button>`;
-    let meta=''; Object.values(PL).forEach(p=>{ if(pon(p.id)&&p.meta) meta+=p.meta(item)||''; });
-    let extra=''; Object.values(PL).forEach(p=>{ if(pon(p.id)&&p.extra) extra+=p.extra(item)||''; });
-
-    row.innerHTML=`${pfx}
-      <span class="itog ${hk?'':'nc'}" onclick="togCol('${item.id}')">${item.collapsed?'▶':'▼'}</span>
-      <input type="checkbox" class="icb ${cbcls}" ${item.checked?'checked':''} onchange="togChk('${item.id}',this.checked)">
-      <div class="ibody">
-        ${(pon('audio') && item.text && item.text.includes('⟨🎙'))
-        ? `<div class="itext-rich ${item.checked?'done':''}">${renderRichText(item)}</div>`
-        : `<div class="itext ${item.checked?'done':''}" contenteditable="true" spellcheck="false"
-              onblur="renItem('${item.id}',this.innerText)"
-              onkeydown="ikey(event,'${item.id}')">${esc(item.text)}</div>`
+            <div class="import-acts">
+              <button class="btn pri" style="flex:1" onclick="doImport()">Importar</button>
+              <button class="btn" onclick="document.getElementById('ita').value=''">Limpar</button>
+            </div>
+            <div class="import-hint">Prefixos: -, *, + • [x] = marcado • Espaços = aninhamento</div>
+          </div>`;
+        lv.appendChild(imp);
+        const tree = document.createElement('div'); tree.id = 'it';
+        rTree(list.items, tree);
+        lv.appendChild(tree);
       }
-        ${meta?`<div class="imeta">${meta}</div>`:''}
-        ${extra}
-        <div class="iend">${abtns}</div>
-      </div>`;
-
-    blk.appendChild(row);
-    if(hk){
-      const ch=document.createElement('div'); ch.className=`kids ${item.collapsed?'col':''}`;
-      rTree(item.children,ch); blk.appendChild(ch);
-    }
-    cont.appendChild(blk);
-  }
-}
-
-// ══════════════════════════════════════════════════════
-//  SIDEBAR / MOBILE
-// ══════════════════════════════════════════════════════
-function toggleSB(){ document.getElementById('sb').classList.toggle('open'); document.getElementById('ov').classList.toggle('open'); }
-function closeSB(){ document.getElementById('sb').classList.remove('open'); document.getElementById('ov').classList.remove('open'); }
-
-// ══════════════════════════════════════════════════════
-//  AÇÕES DE LISTA
-// ══════════════════════════════════════════════════════
-function newList(){
-  openM('Nova Lista',`<div class="fg"><div class="fl">Nome</div><input type="text" id="mn" placeholder="Ex: Compras, Trabalho..."></div>`,()=>{
-    const name=document.getElementById('mn').value.trim()||'Nova Lista';
-    const l={id:genId(),name,items:[],color:'#3ecf8e'};
-    S.lists.push(l); S.active=l.id; save(); renderAll();
-  });
-}
-function selL(id){ S.active=id; S._view='list'; save(); renderCnt(); renderSB(); }
-function delL(id){ S.lists=S.lists.filter(l=>l.id!==id); if(S.active===id) S.active=S.lists[0]?.id||null; save(); renderAll(); }
-function renL(id,name){ const l=S.lists.find(l=>l.id===id); if(l&&name.trim()){l.name=name.trim();save();renderSB();} }
-
-// ══════════════════════════════════════════════════════
-//  AÇÕES DE ITEM
-// ══════════════════════════════════════════════════════
-function addItem(){ const l=getL(); if(!l) return; const item=mkItem(''); l.items.push(item); save(); renderCnt(); setTimeout(()=>focI(item.id),60); }
-function addSub(pid){ const l=getL(); if(!l) return; const par=find(l.items,pid); if(!par) return; const item=mkItem(''); par.children.push(item); par.collapsed=false; save(); renderCnt(); setTimeout(()=>focI(item.id),60); }
-function focI(id){ const el=document.querySelector(`[data-id="${id}"] .itext`); if(!el) return; el.focus(); const r=document.createRange(); r.selectNodeContents(el); window.getSelection().removeAllRanges(); window.getSelection().addRange(r); }
-function delItem(id){ const l=getL(); if(!l) return; remove(l.items,id); save(); renderCnt(); }
-
-function togChk(id,v){
-  const l=getL(); if(!l) return;
-  const item=find(l.items,id); if(!item) return;
-  item.checked=v;
-  const sa=(arr,val)=>arr.forEach(i=>{i.checked=val;if(i.children)sa(i.children,val)});
-  sa(item.children||[],v);
-  save();
-  if(pon('celebrate')&&v){ const{d,t}=cp(l.items); if(d===t&&t>0) confetti(); }
-  renderCnt();
-}
-function togCol(id){ const l=getL(); if(!l) return; const item=find(l.items,id); if(!item) return; item.collapsed=!item.collapsed; save(); renderCnt(); }
-function renItem(id,text){ const l=getL(); if(!l) return; const item=find(l.items,id); if(item){item.text=text.trim()||item.text;save();} }
-
-function ikey(e,id){
-  if(e.key==='Enter'){
-    e.preventDefault(); const l=getL(); if(!l) return;
-    const par=getpar(l.items,id); const arr=par?par.children:l.items;
-    const idx=arr.findIndex(i=>i.id===id); const item=mkItem('');
-    arr.splice(idx+1,0,item); save(); renderCnt(); setTimeout(()=>focI(item.id),60);
-  }
-  if(e.key==='Tab'){
-    e.preventDefault(); const l=getL(); if(!l) return;
-    const par=getpar(l.items,id); const arr=par?par.children:l.items;
-    const idx=arr.findIndex(i=>i.id===id);
-    if(!e.shiftKey&&idx>0){ const[item]=arr.splice(idx,1); arr[idx-1].children.push(item); arr[idx-1].collapsed=false; save(); renderCnt(); setTimeout(()=>focI(item.id),60); }
-    else if(e.shiftKey&&par){ const[item]=arr.splice(idx,1); const gp=getpar(l.items,par.id); const pa=gp?gp.children:l.items; const pi=pa.findIndex(i=>i.id===par.id); pa.splice(pi+1,0,item); save(); renderCnt(); setTimeout(()=>focI(item.id),60); }
-  }
-}
-function doImport(){ const ta=document.getElementById('ita'); if(!ta?.value.trim()) return; const l=getL(); if(!l) return; l.items.push(...parseT(ta.value)); ta.value=''; save(); renderCnt(); }
-
-// ══════════════════════════════════════════════════════
-//  AÇÕES DOS PLUGINS EXISTENTES
-// ══════════════════════════════════════════════════════
-function openTagM(){
-  const l=getL(); if(!l) return;
-  const all=[]; const col=a=>a.forEach(i=>{all.push(i);col(i.children||[]);}); col(l.items);
-  if(!all.length){ alert('Adicione itens primeiro!'); return; }
-  let sc='blue';
-  openM('Adicionar Tag',`
-    <div class="fg"><div class="fl">Item</div>
-      <select id="mis">${all.map(i=>`<option value="${i.id}">${esc(i.text)||'(sem texto)'}</option>`).join('')}</select>
-    </div>
-    <div class="fg"><div class="fl">Nome da tag</div><input type="text" id="mtn" placeholder="Ex: urgente, ideia..."></div>
-    <div class="fg"><div class="fl">Cor</div>
-      <div class="cpick">
-        ${[['red','co-red'],['orange','co-oran'],['yellow','co-yel'],['green','co-grn'],['blue','co-blu'],['purple','co-pur'],['pink','co-pnk']]
-          .map(([c,cl])=>`<div class="copt ${cl} ${c==='blue'?'sel':''}" data-c="${c}" onclick="pickC(this,'${c}')"></div>`).join('')}
-      </div>
-    </div>`,
-  ()=>{
-    const iid=document.getElementById('mis').value;
-    const label=document.getElementById('mtn').value.trim(); if(!label) return;
-    const item=find(l.items,iid); if(!item) return;
-    if(!item.tags) item.tags=[];
-    item.tags.push({label,color:sc}); save(); renderCnt();
-  });
-  window.pickC=(el,c)=>{ sc=c; document.querySelectorAll('.copt').forEach(e=>e.classList.toggle('sel',e.dataset.c===c)); };
-}
-function rmTag(iid,label){ const l=getL(); if(!l) return; const item=find(l.items,iid); if(item?.tags){item.tags=item.tags.filter(t=>t.label!==label);save();renderCnt();} }
-
-function setDue(id){ const l=getL(); if(!l) return; const item=find(l.items,id);
-  openM('Prazo',`<div class="fg"><div class="fl">Data limite</div><input type="date" id="md" value="${item?.due||''}"></div>
-    ${item?.due?`<button class="btn dng full" onclick="clrDue('${id}')">Remover prazo</button>`:''}`,
-  ()=>{ const v=document.getElementById('md')?.value; if(item){item.due=v||null;save();renderCnt();} }); }
-function clrDue(id){ const l=getL();const item=find(l.items,id);if(item){item.due=null;save();closeM();renderCnt();} }
-
-function cycP(id){ const l=getL(); if(!l) return; const item=find(l.items,id); if(!item) return;
-  const o=['none','low','mid','high']; item.priority=o[(o.indexOf(item.priority||'none')+1)%o.length]; save(); renderCnt(); }
-
-function togNote(id){ const l=getL(); if(!l) return; const item=find(l.items,id); if(!item) return; item._sn=!item._sn; renderCnt(); }
-function svNote(id,t){ const l=getL();const item=find(l.items,id);if(item){item.note=t.trim();save();} }
-
-function setEst(id){ const l=getL(); if(!l) return; const item=find(l.items,id);
-  openM('Estimativa',`<div class="fg"><div class="fl">Tempo estimado</div><input type="text" id="me" placeholder="Ex: 30min, 2h, 1 dia..." value="${esc(item?.estimate||'')}"></div>`,
-  ()=>{ const v=document.getElementById('me')?.value.trim(); if(item){item.estimate=v;save();renderCnt();} }); }
-
-function confetti(){ const cs=['#7c6af7','#3ecf8e','#e8565e','#e8c84a','#4fa7e8','#e87ac8'];
-  for(let i=0;i<70;i++){ const el=document.createElement('div'); el.className='cpiece';
-    el.style.cssText=`left:${Math.random()*100}vw;top:-10px;background:${cs[Math.floor(Math.random()*cs.length)]};border-radius:${Math.random()>.5?'50%':'2px'};animation-delay:${Math.random()*.5}s;animation-duration:${.8+Math.random()*.8}s;`;
-    document.body.appendChild(el); el.addEventListener('animationend',()=>el.remove()); } }
-
-function doSearch(q){ const qu=(q||'').toLowerCase().trim();
-  document.querySelectorAll('.irow').forEach(row=>{
-    const txt=row.querySelector('.itext')?.innerText?.toLowerCase()||'';
-    row.classList.toggle('search-hidden',qu&&!txt.includes(qu));
-    row.querySelector('.itext')?.classList.toggle('smatch',!!qu&&txt.includes(qu)); }); }
-
-// ══════════════════════════════════════════════════════
-//  MODAL
-// ══════════════════════════════════════════════════════
-let _mcb=null;
-function openM(title,body,ok){
-  _mcb=ok;
-  document.getElementById('mc').innerHTML=`<div class="mtitle">${title}</div><div style="display:flex;flex-direction:column;gap:12px">${body}</div>
-    ${ok!==null?`<div class="macts"><button class="btn" onclick="closeM()">Cancelar</button><button class="btn pri" onclick="confM()">Confirmar</button></div>`:'<button class="btn full" onclick="closeM()">Fechar</button>'}`;
-  document.getElementById('mb').classList.add('open');
-  setTimeout(()=>document.querySelector('#mc input,#mc select')?.focus(),150);
-}
-function closeM(){ document.getElementById('mb').classList.remove('open'); _mcb=null; }
-function confM(){ if(_mcb)_mcb(); closeM(); }
-function onBD(e){ if(e.target===document.getElementById('mb')) closeM(); }
-
-// ══════════════════════════════════════════════════════
-//  EXPORT / IMPORT JSON
-// ══════════════════════════════════════════════════════
-function exportJ(){ const b=new Blob([JSON.stringify(S,null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='listflow.json'; a.click(); }
-function importJ(){ const inp=document.createElement('input'); inp.type='file'; inp.accept='.json';
-  inp.onchange=e=>{ const f=e.target.files[0]; if(!f) return; const r=new FileReader();
-    r.onload=ev=>{ try{const d=JSON.parse(ev.target.result);if(d.lists){S=d;save();renderAll();}}catch{alert('Arquivo inválido');} };
-    r.readAsText(f); }; inp.click(); }
-// ── 15. ORÇAMENTO ─────────────────────────────────────
-reg('orcamento', {
-  name:'Orçamento', icon:'💰', desc:'Soma valores e horas dos itens marcados', def:false,
-  tb(){
-    return `<button class="tbbtn" onclick="openOrcConfig()">💰 Mão de obra</button>`;
-  },
-  renderSection(list){
-    if(!pon('orcamento')) return '';
-    return calcOrcamento(list);
-  }
-});
-
-function parseValorItem(texto){
-  // Captura número antes de palavras de dinheiro ou tempo
-  // Ex: "10 reais", "1 hora", "30 minutos", "5 conto", "3 pilas"
-  const money = /(\d+(?:[.,]\d+)?)\s*(?:reais?|real|contos?|pilas?|r\$)/gi;
-  const hours  = /(\d+(?:[.,]\d+)?)\s*h(?:oras?|r)?(?:\b)/gi;
-  const mins   = /(\d+(?:[.,]\d+)?)\s*min(?:utos?)?(?:\b)/gi;
-
-  let totalMoney = 0;
-  let totalMinutes = 0;
-
-  let m;
-  while((m = money.exec(texto)) !== null)
-    totalMoney += parseFloat(m[1].replace(',','.'));
-  while((m = hours.exec(texto)) !== null)
-    totalMinutes += parseFloat(m[1].replace(',','.')) * 60;
-  while((m = mins.exec(texto)) !== null)
-    totalMinutes += parseFloat(m[1].replace(',','.'));
-
-  return { totalMoney, totalMinutes };
-}
-
-function calcOrcamento(list){
-  // Pega todos os itens MARCADOS recursivamente
-  const checked = [];
-  const walk = arr => arr.forEach(i => {
-    if(i.checked) checked.push(i);
-    if(i.children) walk(i.children);
-  });
-  walk(list.items);
-
-  if(!checked.length) return `
-    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:14px">
-      <div style="font-size:12px;color:var(--text3);font-family:'JetBrains Mono',monospace">
-        💰 Marque itens com valores para calcular o orçamento.
-      </div>
-    </div>`;
-
-  const precoHora = parseFloat(S._orcPrecoHora || 100);
-
-  let totalDinheiro = 0;
-  let totalMinutos  = 0;
-  const linhas = [];
-
-  for(const item of checked){
-    const { totalMoney, totalMinutes } = parseValorItem(item.text);
-    if(totalMoney > 0 || totalMinutes > 0){
-      const valorTempo = (totalMinutes / 60) * precoHora;
-      const subtotal   = totalMoney + valorTempo;
-      totalDinheiro   += totalMoney;
-      totalMinutos    += totalMinutes;
-
-      let descTempo = '';
-      if(totalMinutes > 0){
-        const h = Math.floor(totalMinutes/60);
-        const min = Math.round(totalMinutes % 60);
-        descTempo = h > 0 && min > 0 ? `${h}h ${min}min` : h > 0 ? `${h}h` : `${min}min`;
+      Object.values(PL).forEach(p => { if (pon(p.id) && p.onRenderBottom) p.onRenderBottom(lv, list); });
+      const _si = document.getElementById('si');
+      if (_si && _si.value.trim()) {
+        const _cnt = document.getElementById('cnt');
+        const _scrollPos = _cnt?.scrollTop || 0;
+        doSearch(_si.value, true);
+        setTimeout(() => { if (_cnt) _cnt.scrollTop = _scrollPos; }, 30);
       }
-
-      linhas.push(`
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">
-          <div style="font-size:12px;color:var(--text2);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(item.text)}</div>
-          <div style="font-size:12px;font-family:'JetBrains Mono',monospace;color:var(--text);flex-shrink:0;text-align:right">
-            ${totalMoney>0 ? `<span style="color:var(--green)">R$ ${totalMoney.toFixed(2).replace('.',',')}</span>` : ''}
-            ${descTempo ? `<span style="color:var(--blue);margin-left:6px">⏱ ${descTempo}</span>` : ''}
-            ${valorTempo>0 ? `<span style="color:var(--orange);margin-left:6px">+R$ ${valorTempo.toFixed(2).replace('.',',')}</span>` : ''}
-          </div>
-        </div>`);
     }
-  }
 
-  const valorTotalTempo = (totalMinutos / 60) * precoHora;
-  const grandTotal      = totalDinheiro + valorTotalTempo;
+    function rTree(items, cont) {
+      for (const item of items) {
+        const blk = document.createElement('div'); blk.className = 'iblock';
+        const row = document.createElement('div'); row.className = 'irow'; row.dataset.id = item.id;
+        const hk = !!item.children?.length;
+        let cbcls = '';
+        if (hk) { const { d, t } = cp(item.children); if (d > 0 && d < t) cbcls = 'par'; }
+        let pfx = ''; Object.values(PL).forEach(p => { if (pon(p.id) && p.pfx) pfx += p.pfx(item) || ''; });
+        let abtns = `<button class="iabtn" title="Sub-item" onclick="addSub('${item.id}')">⊕</button>`;
+        abtns += pon('mover') ? `<button class="iabtn" title="Mover / Indentar" onclick="abrirMenuMover('${item.id}',this)">⇅</button>` : '';
+        Object.values(PL).forEach(p => { if (pon(p.id) && p.abtn) abtns += p.abtn(item) || ''; });
+        abtns += `<button class="iabtn" onclick="confirmarDel('item','${item.id}')" style="color:var(--red);opacity:.7">✕</button>`;
+        let meta = ''; Object.values(PL).forEach(p => { if (pon(p.id) && p.meta) meta += p.meta(item) || ''; });
+        let extra = ''; Object.values(PL).forEach(p => { if (pon(p.id) && p.extra) extra += p.extra(item) || ''; });
+        row.innerHTML = `${pfx}
+          <span class="itog ${hk ? '' : 'nc'}" onclick="togCol('${item.id}')">${item.collapsed ? '▶' : '▼'}</span>
+          <input type="checkbox" class="icb ${cbcls}" ${item.checked ? 'checked' : ''} onchange="togChk('${item.id}',this.checked)">
+          <div class="ibody">
+            ${(pon('audio') && item.text && item.text.includes('⟨🎙'))
+              ? `<div class="itext-rich ${item.checked ? 'done' : ''}">${renderRichText(item)}</div>`
+              : `<div class="itext ${item.checked ? 'done' : ''}" contenteditable="true" spellcheck="false"
+                  onblur="renItem('${item.id}',this.innerText)"
+                  onkeydown="ikey(event,'${item.id}')">${esc(item.text).replace(/\n/g, '<br>')}</div>`}
+            ${meta ? `<div class="imeta">${meta}</div>` : ''}
+            ${extra}
+            <div class="iend">${abtns}</div>
+          </div>`;
+        blk.appendChild(row);
+        if (hk) {
+          const ch = document.createElement('div'); ch.className = `kids ${item.collapsed ? 'col' : ''}`;
+          ch.id = `ch-${item.id}`;
+          rTree(item.children, ch); blk.appendChild(ch);
+        }
+        cont.appendChild(blk);
+      }
+    }
 
-  const hTotal   = Math.floor(totalMinutos/60);
-  const minTotal = Math.round(totalMinutos % 60);
-  const tempoStr = hTotal > 0 && minTotal > 0 ? `${hTotal}h ${minTotal}min` : hTotal > 0 ? `${hTotal}h` : minTotal > 0 ? `${minTotal}min` : '';
+    // ══════════════════════════════════════════════════════
+    //  SIDEBAR / MOBILE
+    // ══════════════════════════════════════════════════════
+    function toggleSB() { document.getElementById('sb').classList.toggle('open'); document.getElementById('ov').classList.toggle('open'); }
+    function closeSB() { document.getElementById('sb').classList.remove('open'); document.getElementById('ov').classList.remove('open'); }
+    function _sbExpandir(qual) {
+      const sp = document.getElementById('sbSectionPlugins');
+      const sl = document.getElementById('sbSectionListas');
+      const ap = document.getElementById('sbPluginArrow');
+      const al = document.getElementById('sbListasArrow');
+      if (!sp || !sl) return;
+      if (qual === 'plugins') {
+        sp.classList.add('expandido'); sp.classList.remove('recolhido');
+        sl.classList.add('recolhido'); sl.classList.remove('expandido');
+        if (ap) ap.textContent = '▲'; if (al) al.textContent = '▼';
+      } else {
+        sl.classList.add('expandido'); sl.classList.remove('recolhido');
+        sp.classList.add('recolhido'); sp.classList.remove('expandido');
+        if (al) al.textContent = '▲'; if (ap) ap.textContent = '▼';
+      }
+    }
 
-  if(!linhas.length) return `
-    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:14px">
-      <div style="font-size:12px;color:var(--text3);font-family:'JetBrains Mono',monospace">
-        💰 Nenhum item marcado contém valores ou horas reconhecíveis.
-      </div>
-    </div>`;
+    // ══════════════════════════════════════════════════════
+    //  AÇÕES DE LISTA
+    // ══════════════════════════════════════════════════════
+    function newList() {
+      openM('Nova Lista', `<div class="fg"><div class="fl">Nome</div><input type="text" id="mn" placeholder="Ex: Compras, Trabalho..."></div>`, () => {
+        const name = document.getElementById('mn').value.trim() || 'Nova Lista';
+        const l = { id: genId(), name, items: [], color: '#3ecf8e' };
+        S.lists.push(l); S.active = l.id; save(); renderAll();
+      });
+    }
+    function selL(id) { S.active = id; S._view = 'list'; save(); renderCnt(); renderSB(); }
+    function delL(id) { S.lists = S.lists.filter(l => l.id !== id); if (S.active === id) S.active = S.lists[0]?.id || null; save(); renderAll(); }
+    function renL(id, name) { const l = S.lists.find(l => l.id === id); if (l && name.trim()) { l.name = name.trim(); save(); renderSB(); } }
 
-  return `
-    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:4px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-        <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text3)">💰 Orçamento</div>
-        <div style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--text3)">
-          mão de obra: R$ ${precoHora.toFixed(2).replace('.',',')}/h
+    // ══════════════════════════════════════════════════════
+    //  AÇÕES DE ITEM
+    // ══════════════════════════════════════════════════════
+    function addItem() { const l = getL(); if (!l) return; const item = mkItem(''); l.items.push(item); save(); renderCnt(); setTimeout(() => focI(item.id), 60); }
+    function addSub(pid) { const l = getL(); if (!l) return; const par = find(l.items, pid); if (!par) return; const item = mkItem(''); par.children.push(item); par.collapsed = false; save(); renderCnt(); setTimeout(() => focI(item.id), 60); }
+    function focI(id) { const el = document.querySelector(`[data-id="${id}"] .itext`); if (!el) return; el.focus(); const r = document.createRange(); r.selectNodeContents(el); window.getSelection().removeAllRanges(); window.getSelection().addRange(r); }
+    function delItem(id) { const l = getL(); if (!l) return; remove(l.items, id); save(); renderCnt(); }
+
+    function togChk(id, v) {
+      const l = getL(); if (!l) return;
+      const item = find(l.items, id); if (!item) return;
+      item.checked = v;
+      if (pon('treino') && v) {
+        const pai = getpar(l.items, id);
+        const ehFolha = !item.children || item.children.length === 0;
+        if (pai !== null && ehFolha) treinoIniciarDescanso(item);
+      }
+      save();
+      if (pon('celebrate') && v) { const { d, t } = cp(l.items); if (d === t && t > 0) confetti(); }
+      renderCnt(); renderSB();
+    }
+
+    function togCol(id) { const l = getL(); if (!l) return; const item = find(l.items, id); if (!item) return; item.collapsed = !item.collapsed; save(); renderCnt(); }
+    function renItem(id, text) { const l = getL(); if (!l) return; const item = find(l.items, id); if (item) { item.text = text.trim() || item.text; save(); } }
+
+    function ikey(e, id) {
+      if (e.key === 'Enter') {
+        if (e.shiftKey) {
+          e.preventDefault();
+          const l = getL(); if (!l) return;
+          const par = getpar(l.items, id); const arr = par ? par.children : l.items;
+          const idx = arr.findIndex(i => i.id === id); const item = mkItem('');
+          arr.splice(idx + 1, 0, item); save(); renderCnt(); setTimeout(() => focI(item.id), 60);
+        }
+      }
+      if (e.key === 'Tab') {
+        e.preventDefault(); const l = getL(); if (!l) return;
+        const par = getpar(l.items, id); const arr = par ? par.children : l.items;
+        const idx = arr.findIndex(i => i.id === id);
+        if (!e.shiftKey && idx > 0) { const [item] = arr.splice(idx, 1); arr[idx - 1].children.push(item); arr[idx - 1].collapsed = false; save(); renderCnt(); setTimeout(() => focI(item.id), 60); }
+        else if (e.shiftKey && par) { const [item] = arr.splice(idx, 1); const gp = getpar(l.items, par.id); const pa = gp ? gp.children : l.items; const pi = pa.findIndex(i => i.id === par.id); pa.splice(pi + 1, 0, item); save(); renderCnt(); setTimeout(() => focI(item.id), 60); }
+      }
+    }
+
+    function doImport() { const ta = document.getElementById('ita'); if (!ta?.value.trim()) return; const l = getL(); if (!l) return; l.items.push(...parseT(ta.value)); ta.value = ''; save(); renderCnt(); }
+
+    // ══════════════════════════════════════════════════════
+    //  AÇÕES DOS PLUGINS EXISTENTES
+    // ══════════════════════════════════════════════════════
+    function openTagM() {
+      const l = getL(); if (!l) return;
+      const all = []; const col = a => a.forEach(i => { all.push(i); col(i.children || []); }); col(l.items);
+      if (!all.length) { alert('Adicione itens primeiro!'); return; }
+      let sc = 'blue';
+      openM('Adicionar Tag', `
+        <div class="fg"><div class="fl">Item</div>
+          <select id="mis">${all.map(i => `<option value="${i.id}">${esc(i.text) || '(sem texto)'}</option>`).join('')}</select>
         </div>
-      </div>
-      ${linhas.join('')}
-      <div style="display:flex;justify-content:space-between;align-items:center;padding-top:10px;margin-top:4px">
-        <div style="display:flex;flex-direction:column;gap:2px">
-          ${tempoStr ? `<div style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--blue)">⏱ ${tempoStr} × R$ ${precoHora.toFixed(2).replace('.',',')}/h = R$ ${valorTotalTempo.toFixed(2).replace('.',',')}</div>` : ''}
-          ${totalDinheiro > 0 ? `<div style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--green)">💵 Materiais: R$ ${totalDinheiro.toFixed(2).replace('.',',')}</div>` : ''}
-        </div>
-        <div style="font-size:18px;font-weight:800;color:var(--accent)">R$ ${grandTotal.toFixed(2).replace('.',',')}</div>
-      </div>
-    </div>`;
-}
-
-function openOrcConfig(){
-  openM('💰 Mão de obra',`
-    <div class="fg">
-      <div class="fl">Preço por hora (R$)</div>
-      <input type="number" id="moh" min="0" step="0.01"
-        placeholder="Ex: 100"
-        value="${S._orcPrecoHora || 100}">
-    </div>
-    <div style="font-size:12px;color:var(--text3);font-family:'JetBrains Mono',monospace;line-height:1.6">
-      Exemplos reconhecidos nos itens:<br>
-      • <b>10 reais</b> / <b>10 real</b> / <b>10 conto</b> / <b>10 pilas</b><br>
-      • <b>1 hora</b> / <b>1h</b> / <b>30 minutos</b> / <b>30min</b>
-    </div>
-  `, ()=>{
-    const v = parseFloat(document.getElementById('moh').value);
-    if(!isNaN(v) && v >= 0){ S._orcPrecoHora = v; save(); renderCnt(); }
-  });
-}
-// ── 16. QUIZ ──────────────────────────────────────────
-reg('quiz', {
-  name:'Quiz / Flashcard', icon:'🧠', desc:'Treino com perguntas e respostas embaralhadas', def:false,
-  tb(){
-    if(!S._quizAtivo) return `<button class="tbbtn" onclick="iniciarQuiz()">🧠 Iniciar Quiz</button>`;
-    return `<button class="tbbtn" onclick="encerrarQuiz()">✕ Sair do Quiz</button>`;
-  }
-});
-
-// ── Estado do quiz ──
-// S._quizAtivo     : bool
-// S._quizPerguntas : [{pai, filhos[], correta}] — lista embaralhada
-// S._quizIdx       : índice atual
-// S._quizPontos    : acertos
-// S._quizTotal     : total respondido
-// S._quizRespondeu : bool — já escolheu nesta pergunta?
-
-function iniciarQuiz(){
-  const list = getL(); if(!list) return;
-
-  // Coleta só itens PAI que têm pelo menos 2 filhos
-  const candidatos = list.items.filter(i => i.children && i.children.length >= 2);
-  if(candidatos.length === 0){
-    alert('Para o quiz, crie itens com pelo menos 2 filhos.\nOs pais serão as perguntas e os filhos as respostas.');
-    return;
-  }
-
-  // Monta perguntas: cada filho do pai é uma opção, o primeiro filho é a "correta"
-  // (ou seja: o usuário define a correta sendo o PRIMEIRO filho)
-  const perguntas = candidatos.map(pai => {
-    const filhos = [...pai.children];
-    const correta = filhos[0].text; // primeiro filho = resposta certa
-    const opcoes = shuffle([...filhos.map(f => f.text)]);
-    return { pergunta: pai.text, opcoes, correta };
-  });
-
-  S._quizAtivo     = true;
-  S._quizPerguntas = shuffle(perguntas);
-  S._quizIdx       = 0;
-  S._quizPontos    = 0;
-  S._quizTotal     = 0;
-  S._quizRespondeu = false;
-  save(); renderAll();
-}
-
-function encerrarQuiz(){
-  S._quizAtivo = false;
-  save(); renderAll();
-}
-
-function shuffle(arr){
-  const a = [...arr];
-  for(let i = a.length - 1; i > 0; i--){
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
-
-function responderQuiz(opcao){
-  if(S._quizRespondeu) return; // já respondeu, aguarda próxima
-  S._quizRespondeu = true;
-  S._quizTotal++;
-  const q = S._quizPerguntas[S._quizIdx];
-  if(opcao === q.correta) S._quizPontos++;
-  save(); renderCnt();
-}
-
-function proximaQuiz(){
-  S._quizIdx++;
-  S._quizRespondeu = false;
-  if(S._quizIdx >= S._quizPerguntas.length){
-    // Terminou todas as perguntas
-    S._quizIdx = 0;
-    S._quizPerguntas = shuffle(S._quizPerguntas); // embaralha de novo pro próximo ciclo
-  }
-  save(); renderCnt();
-}
-
-function renderQuiz(){
-  const perguntas = S._quizPerguntas;
-  const idx       = S._quizIdx;
-  const q         = perguntas[idx];
-  const pontos    = S._quizPontos;
-  const total     = S._quizTotal;
-  const respondeu = S._quizRespondeu;
-  const pct       = total > 0 ? Math.round(pontos / total * 100) : 0;
-  const restantes = perguntas.length;
-
-  // Cores das opções após responder
-  const corOpcao = opcao => {
-    if(!respondeu) return `background:var(--surface2);border-color:var(--border);color:var(--text)`;
-    if(opcao === q.correta) return `background:rgba(62,207,142,.15);border-color:var(--green);color:var(--green)`;
-    return `background:rgba(232,86,94,.08);border-color:rgba(232,86,94,.3);color:var(--text3)`;
-  };
-
-  const iconeOpcao = opcao => {
-    if(!respondeu) return '';
-    if(opcao === q.correta) return '✅ ';
-    return '❌ ';
-  };
-
-  return `
-    <div style="display:flex;flex-direction:column;gap:14px">
-
-      <!-- Placar -->
-      <div style="display:flex;align-items:center;gap:10px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:12px 16px">
-        <div style="flex:1;display:flex;flex-direction:column;gap:4px">
-          <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text3)">Pontuação</div>
-          <div style="display:flex;align-items:baseline;gap:6px">
-            <span style="font-size:24px;font-weight:800;color:var(--accent)">${pontos}</span>
-            <span style="font-size:13px;color:var(--text3)">/ ${total} respondidas</span>
+        <div class="fg"><div class="fl">Nome da tag</div><input type="text" id="mtn" placeholder="Ex: urgente, ideia..."></div>
+        <div class="fg"><div class="fl">Cor</div>
+          <div class="cpick">
+            ${[['red','co-red'],['orange','co-oran'],['yellow','co-yel'],['green','co-grn'],['blue','co-blu'],['purple','co-pur'],['pink','co-pnk']]
+              .map(([c,cl]) => `<div class="copt ${cl} ${c==='blue'?'sel':''}" data-c="${c}" onclick="pickC(this,'${c}')"></div>`).join('')}
           </div>
-          <div style="background:var(--border);border-radius:99px;height:4px;overflow:hidden;margin-top:2px">
-            <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,var(--accent),var(--green));border-radius:99px;transition:width .4s"></div>
-          </div>
-        </div>
-        <div style="text-align:center;padding-left:12px;border-left:1px solid var(--border)">
-          <div style="font-size:22px;font-weight:800;color:${pct>=70?'var(--green)':pct>=40?'var(--yellow)':'var(--red)'}">${pct}%</div>
-          <div style="font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace">${idx+1} / ${restantes}</div>
-        </div>
-      </div>
+        </div>`,
+        () => {
+          const iid = document.getElementById('mis').value;
+          const label = document.getElementById('mtn').value.trim(); if (!label) return;
+          const item = find(l.items, iid); if (!item) return;
+          if (!item.tags) item.tags = [];
+          item.tags.push({ label, color: sc }); save(); renderCnt();
+        });
+      window.pickC = (el, c) => { sc = c; document.querySelectorAll('.copt').forEach(e => e.classList.toggle('sel', e.dataset.c === c)); };
+    }
+    function rmTag(iid, label) { const l = getL(); if (!l) return; const item = find(l.items, iid); if (item?.tags) { item.tags = item.tags.filter(t => t.label !== label); save(); renderCnt(); } }
 
-      <!-- Pergunta -->
-      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:18px 16px">
-        <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:10px">🧠 Pergunta ${idx+1} de ${restantes}</div>
-        <div style="font-size:17px;font-weight:700;color:var(--text);line-height:1.4">${esc(q.pergunta)}</div>
-      </div>
+    function setDue(id) {
+      const l = getL(); if (!l) return; const item = find(l.items, id);
+      openM('Prazo', `<div class="fg"><div class="fl">Data limite</div><input type="date" id="md" value="${item?.due || ''}"></div>
+        ${item?.due ? `<button class="btn dng full" onclick="clrDue('${id}')">Remover prazo</button>` : ''}`,
+        () => { const v = document.getElementById('md')?.value; if (item) { item.due = v || null; save(); renderCnt(); } });
+    }
+    function clrDue(id) { const l = getL(); const item = find(l.items, id); if (item) { item.due = null; save(); closeM(); renderCnt(); } }
 
-      <!-- Opções -->
-      <div style="display:flex;flex-direction:column;gap:8px">
-        ${q.opcoes.map(op => `
-          <button onclick="responderQuiz('${esc(op).replace(/'/g,"&#39;")}')"
-            style="width:100%;padding:13px 16px;border-radius:var(--r);border:1px solid;font-family:'Syne',sans-serif;font-size:14px;font-weight:600;cursor:pointer;text-align:left;transition:all .2s;${corOpcao(op)}">
-            ${iconeOpcao(op)}${esc(op)}
-          </button>`).join('')}
-      </div>
+    function cycP(id) {
+      const l = getL(); if (!l) return; const item = find(l.items, id); if (!item) return;
+      const o = ['none','low','mid','high']; item.priority = o[(o.indexOf(item.priority||'none')+1)%o.length]; save(); renderCnt();
+    }
 
-      <!-- Botão próxima / feedback -->
-      ${respondeu ? `
+    function togNote(id) { const l = getL(); if (!l) return; const item = find(l.items, id); if (!item) return; item._sn = !item._sn; renderCnt(); }
+    function svNote(id, t) { const l = getL(); const item = find(l.items, id); if (item) { item.note = t.trim(); save(); } }
+
+    function setEst(id) {
+      const l = getL(); if (!l) return; const item = find(l.items, id);
+      openM('Estimativa', `<div class="fg"><div class="fl">Tempo estimado</div><input type="text" id="me" placeholder="Ex: 30min, 2h, 1 dia..." value="${esc(item?.estimate||'')}"></div>`,
+        () => { const v = document.getElementById('me')?.value.trim(); if (item) { item.estimate = v; save(); renderCnt(); } });
+    }
+
+    function confetti() {
+      const cs = ['#7c6af7','#3ecf8e','#e8565e','#e8c84a','#4fa7e8','#e87ac8'];
+      for (let i = 0; i < 70; i++) {
+        const el = document.createElement('div'); el.className = 'cpiece';
+        el.style.cssText = `left:${Math.random()*100}vw;top:-10px;background:${cs[Math.floor(Math.random()*cs.length)]};border-radius:${Math.random()>.5?'50%':'2px'};animation-delay:${Math.random()*.5}s;animation-duration:${.8+Math.random()*.8}s;`;
+        document.body.appendChild(el); el.addEventListener('animationend', () => el.remove());
+      }
+    }
+
+    function doSearch(q, preservarFilhos = false) {
+      const qu = (q || '').toLowerCase().trim();
+      const l = getL();
+      document.querySelectorAll('.itext[data-orig]').forEach(el => { el.innerHTML = el.getAttribute('data-orig'); el.removeAttribute('data-orig'); });
+      if (!qu) {
+        document.querySelectorAll('.irow').forEach(r => r.classList.remove('search-hidden'));
+        if (l) { document.querySelectorAll('.kids').forEach(kids => { const id = (kids.id||'').replace('ch-',''); const item = id ? find(l.items, id) : null; if (item) kids.classList.toggle('col', !!item.collapsed); else kids.classList.add('col'); }); }
+        return;
+      }
+      const matchIds = new Set(), parentIds = new Set();
+      function deep(items, pais) {
+        for (let i = 0; i < (items||[]).length; i++) {
+          const item = items[i];
+          if ((item.text||'').toLowerCase().indexOf(qu) !== -1) { matchIds.add(item.id); pais.forEach(pid => parentIds.add(pid)); }
+          if (item.children?.length) deep(item.children, pais.concat([item.id]));
+        }
+      }
+      if (l) deep(l.items, []);
+      if (l) { document.querySelectorAll('.kids').forEach(kids => { const paiId = (kids.id||'').replace('ch-',''); if (!paiId) return; const item = find(l.items, paiId); if (item && item.collapsed) kids.classList.add('col'); else kids.classList.remove('col'); }); }
+      document.querySelectorAll('.irow').forEach(row => {
+        const id = row.dataset.id; const itext = row.querySelector('.itext');
+        if (matchIds.has(id)) {
+          row.classList.remove('search-hidden');
+          if (itext) { const texto = itext.innerText||''; itext.setAttribute('data-orig', itext.innerHTML); const re = new RegExp('('+qu.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi'); itext.innerHTML = esc(texto).replace(re,'<mark style="background:#e8c84a;color:#111;border-radius:3px;padding:0 3px;font-weight:700">$1</mark>'); }
+        } else if (parentIds.has(id)) {
+          row.classList.remove('search-hidden');
+        } else {
+          if (!preservarFilhos) { row.classList.add('search-hidden'); }
+          else { const kidsDoMatch = [...matchIds].some(mid => { const el = document.getElementById('ch-'+mid); return el && el.contains(row); }); if (!kidsDoMatch) row.classList.add('search-hidden'); else row.classList.remove('search-hidden'); }
+        }
+      });
+      document.querySelectorAll('.kids').forEach(kids => {
+        const paiId = (kids.id||'').replace('ch-',''); if (!paiId) return;
+        const item = l ? find(l.items, paiId) : null;
+        if (matchIds.has(paiId) || parentIds.has(paiId)) { if (item && item.collapsed) kids.classList.add('col'); else kids.classList.remove('col'); }
+        else kids.classList.add('col');
+      });
+    }
+
+    // ══════════════════════════════════════════════════════
+    //  MODAL
+    // ══════════════════════════════════════════════════════
+    let _mcb = null;
+    function openM(title, body, ok) {
+      _mcb = ok;
+      document.getElementById('mc').innerHTML = `<div class="mtitle">${title}</div><div style="display:flex;flex-direction:column;gap:12px">${body}</div>
+        ${ok !== null ? `<div class="macts"><button class="btn" onclick="closeM()">Cancelar</button><button class="btn pri" onclick="confM()">Confirmar</button></div>` : '<button class="btn full" onclick="closeM()">Fechar</button>'}`;
+      document.getElementById('mb').classList.add('open');
+      setTimeout(() => document.querySelector('#mc input,#mc select')?.focus(), 150);
+    }
+    function closeM() { document.getElementById('mb').classList.remove('open'); _mcb = null; }
+    function confM() { if (_mcb) _mcb(); closeM(); }
+    function onBD(e) { if (e.target === document.getElementById('mb')) closeM(); }
+
+    // ══════════════════════════════════════════════════════
+    //  EXPORT / IMPORT JSON
+    // ══════════════════════════════════════════════════════
+    function exportJ() {
+      const l = getL();
+      openM('⬆ Exportar', `
         <div style="display:flex;flex-direction:column;gap:8px">
-          <div style="padding:12px 14px;border-radius:var(--r);background:${q.opcoes.find(o=>o===q.correta)===q.correta?'rgba(62,207,142,.1)':'rgba(62,207,142,.1)'};border:1px solid rgba(62,207,142,.25);font-size:13px;color:var(--green);font-family:'JetBrains Mono',monospace">
-            ✅ Resposta certa: <b>${esc(q.correta)}</b>
-          </div>
-          <button onclick="proximaQuiz()" class="btn pri" style="width:100%;padding:13px">
-            ${idx + 1 >= restantes ? '🔄 Reiniciar Quiz' : 'Próxima →'}
+          <button class="btn pri" style="margin-top:0" onclick="closeM();_exportLista()">
+            📋 Exportar lista atual${l ? ' — ' + esc(l.name) : ''}
           </button>
-        </div>` : `
-        <div style="font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;text-align:center">
-          Toque em uma opção para responder
-        </div>`}
-
-      <!-- Botão sair -->
-      <button onclick="encerrarQuiz()" class="btn" style="width:100%">✕ Encerrar Quiz</button>
-    </div>`;
-}
-// plugin estrelas
-reg('stars', {
-  name: 'Avaliação ⭐',
-  icon: '⭐',
-  desc: 'Dê estrelas aos itens',
-  def: false,
-
-  // Botão que aparece em cada item
-  abtn(item) {
-    return `<button class="iabtn"
-      onclick="setStars('${item.id}')">⭐</button>`;
-  },
-
-  // Badge exibido abaixo do texto
-  meta(item) {
-    if(!item.stars) return '';
-    return '⭐'.repeat(item.stars);
-  }
-});
-
-function setStars(id) {
-  const l = getL();
-  const item = find(l.items, id);
-  openM('Avaliar item', `
-    <div class="fg">
-      <div class="fl">Estrelas (1-5)</div>
-      <input type="number" id="mst"
-        min="1" max="5"
-        value="${item?.stars||3}">
-    </div>
-  `, () => {
-    const v = +document.getElementById('mst').value;
-    if(item) { item.stars = v; save(); renderCnt(); }
-  });
-}
-// ── 17. FOCO ──────────────────────────────────────────
-reg('focus', {
-  name:'Modo Foco', icon:'🎯', desc:'Mostra só o caminho que você está expandindo', def:false,
-  tb(){
-    if(!S._focusAtivo) return `<button class="tbbtn" onclick="iniciarFocus()">🎯 Modo Foco</button>`;
-    return `<button class="tbbtn" style="background:rgba(124,106,247,.2);border-color:var(--accent);color:var(--accent)" onclick="encerrarFocus()">🎯 Sair do Foco</button>`;
-  }
-});
-
-function iniciarFocus(){
-  S._focusAtivo  = true;
-  S._focusPath   = []; // caminho de ids expandidos: [avô, pai, filho...]
-  save(); renderAll();
-}
-
-function encerrarFocus(){
-  S._focusAtivo = false;
-  S._focusPath  = [];
-  save(); renderAll();
-}
-
-function focusEntrar(id){
-  // Entra num item: adiciona ao caminho
-  const list = getL(); if(!list) return;
-  const item = find(list.items, id); if(!item) return;
-
-  // Verifica se o id já está no caminho (voltar para um nível anterior)
-  const idx = S._focusPath.indexOf(id);
-  if(idx !== -1){
-    // Trunca o caminho até este ponto
-    S._focusPath = S._focusPath.slice(0, idx + 1);
-  } else {
-    S._focusPath.push(id);
-  }
-  save(); renderCnt();
-}
-
-function focusVoltar(){
-  S._focusPath.pop();
-  save(); renderCnt();
-}
-
-// Marca/desmarca SOMENTE o item clicado, sem propagar para filhos
-function togChkFocus(id, v){
-  const list = getL(); if(!list) return;
-  const item = find(list.items, id); if(!item) return;
-  item.checked = v; // só este item, sem tocar nos filhos
-  save(); renderCnt();
-}
-
-function renderFocus(list){
-  const path = S._focusPath || [];
-
-  // Descobre os itens a mostrar em cada nível do caminho
-  // Nível 0: filhos diretos da lista (raiz)
-  // Nível N: filhos do item path[N-1]
-
-  let nivelAtual;
-  let itemAtivo = null;
-
-  if(path.length === 0){
-    nivelAtual = list.items;
-  } else {
-    itemAtivo = find(list.items, path[path.length - 1]);
-    nivelAtual = itemAtivo?.children || [];
-  }
-
-  // Monta o breadcrumb (trilha de navegação)
-  const breadcrumb = path.map((id, i) => {
-    const item = find(list.items, id);
-    return `<span onclick="focusEntrar('${id}')"
-      style="cursor:pointer;color:${i === path.length-1 ? 'var(--accent)' : 'var(--text3)'};
-             font-size:12px;font-family:'JetBrains Mono',monospace;
-             text-decoration:${i === path.length-1 ? 'none' : 'underline'}"
-      >${esc(item?.text||'?')}</span>`;
-  });
-
-  const trilha = `
-    <div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;padding:8px 12px;
-                background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);
-                font-size:12px;color:var(--text3);font-family:'JetBrains Mono',monospace">
-      <span onclick="encerrarFocus();iniciarFocus()"
-        style="cursor:pointer;color:var(--text3);text-decoration:underline">🎯 raiz</span>
-      ${breadcrumb.map(b => `<span style="color:var(--border)">›</span>${b}`).join('')}
-    </div>`;
-
-  // Botão voltar
-  const btnVoltar = path.length > 0 ? `
-    <button onclick="focusVoltar()" class="btn" style="width:100%;margin-bottom:4px">
-      ← Voltar
-    </button>` : '';
-
-  // Contexto: mostra o item pai atual em destaque
-  const ctxPai = itemAtivo ? `
-    <div style="background:var(--surface2);border:1px solid var(--accent);border-radius:var(--r);
-                padding:14px 16px;display:flex;align-items:center;gap:10px">
-      <input type="checkbox" class="icb ${itemAtivo.checked?'checked':''}"
-        ${itemAtivo.checked?'checked':''}
-        onchange="togChkFocus('${itemAtivo.id}',this.checked)"
-        style="flex-shrink:0">
-      <div style="flex:1;font-size:16px;font-weight:700;color:var(--text)">${esc(itemAtivo.text)}</div>
-      ${itemAtivo.children?.length ? `<span style="font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace">${itemAtivo.children.length} filho${itemAtivo.children.length>1?'s':''}</span>` : ''}
-    </div>` : '';
-
-  // Lista os itens do nível atual
-  const listaItens = nivelAtual.length === 0 ? `
-    <div style="text-align:center;padding:24px;color:var(--text3);font-size:13px;font-family:'JetBrains Mono',monospace">
-      Sem filhos neste item.
-    </div>` :
-    nivelAtual.map(item => {
-      const temFilhos = item.children?.length > 0;
-      const {d, t} = temFilhos ? cp(item.children) : {d:0, t:0};
-      return `
-        <div style="display:flex;align-items:center;gap:8px;padding:10px 12px;
-                    background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);
-                    transition:border-color .15s"
-             ${temFilhos ? `onclick="focusEntrar('${item.id}')" style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);transition:border-color .15s"` : ''}>
-          <input type="checkbox" class="icb"
-            ${item.checked?'checked':''}
-            onchange="event.stopPropagation();togChkFocus('${item.id}',this.checked)"
-            style="flex-shrink:0">
-          <div style="flex:1;font-size:14px;color:${item.checked?'var(--text3)':'var(--text)'};
-                      text-decoration:${item.checked?'line-through':'none'};
-                      line-height:1.4">${esc(item.text)}</div>
-          ${temFilhos ? `
-            <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-              <span style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--text3)">${d}/${t}</span>
-              <span style="color:var(--text3);font-size:12px">›</span>
-            </div>` : ''}
-        </div>`;
-    }).join('');
-
-  return `
-    <div style="display:flex;flex-direction:column;gap:10px">
-      ${trilha}
-      ${btnVoltar}
-      ${ctxPai}
-      ${ctxPai && nivelAtual.length > 0 ? `<div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text3);padding:4px 2px">Filhos</div>` : ''}
-      <div style="display:flex;flex-direction:column;gap:6px">${listaItens}</div>
-      ${nivelAtual.length > 0 && nivelAtual[0].children?.length > 0 ? `<div style="font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;text-align:center;padding:4px">Toque num item para entrar nos filhos ›</div>` : ''}
-    </div>`;
-}
-// ── 18. ÁUDIO INLINE ──────────────────────────────────
-reg('audio', {
-  name:'Áudio Inline', icon:'🎙️', desc:'Áudios embutidos dentro do texto', def:false,
-  abtn(item){
-    return `<button class="iabtn" title="Inserir áudio no cursor" onclick="audioInsert('${item.id}')">🎙️</button>`;
-  }
-});
-
-(()=>{
-  const s = document.createElement('style');
-  s.textContent = `
-    /* texto do item com áudio — não editável diretamente */
-    .itext-rich{font-size:14px;line-height:2.2;color:var(--text);font-family:'Syne',sans-serif;
-                word-break:break-word;display:block;width:100%;min-height:20px;
-                outline:none;cursor:text}
-    .itext-rich.done{text-decoration:line-through;color:var(--text3)}
-
-    /* chip de áudio inline */
-    .aud-chip{display:inline-flex;align-items:center;gap:5px;
-              background:var(--surface2);border:1px solid var(--border);
-              border-radius:20px;padding:3px 8px 3px 6px;
-              margin:0 3px;vertical-align:middle;white-space:nowrap;
-              position:relative;top:-1px}
-    .aud-chip.pending{background:rgba(124,106,247,.1);border-color:rgba(124,106,247,.4)}
-    .aud-chip.recording{background:rgba(232,86,94,.12);border-color:var(--red)}
-
-    /* botão play customizado */
-    .aud-play{width:26px;height:26px;border-radius:50%;border:none;
-              background:var(--accent);color:white;font-size:11px;
-              cursor:pointer;display:flex;align-items:center;justify-content:center;
-              flex-shrink:0;transition:all .15s}
-    .aud-play:active{transform:scale(.9)}
-    .aud-play.playing{background:var(--green)}
-
-    /* barra de progresso custom */
-    .aud-bar-wrap{width:70px;height:4px;background:var(--border);border-radius:99px;
-                  cursor:pointer;flex-shrink:0;position:relative}
-    .aud-bar-fill{height:100%;background:var(--accent);border-radius:99px;
-                  width:0%;transition:width .1s linear;pointer-events:none}
-    .aud-playing .aud-bar-fill{background:var(--green)}
-
-    .aud-time{font-size:10px;font-family:'JetBrains Mono',monospace;
-              color:var(--text3);flex-shrink:0;min-width:28px}
-
-    /* botão gravar */
-    .aud-rec-btn{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;
-                 border-radius:8px;border:1px solid var(--border);background:var(--surface);
-                 color:var(--text2);font-family:'Syne',sans-serif;font-size:11px;
-                 font-weight:600;cursor:pointer;flex-shrink:0}
-    .aud-rec-btn.on{background:rgba(232,86,94,.15);border-color:var(--red);
-                    color:var(--red);animation:audpulse .7s infinite alternate}
-    .aud-del-btn{width:18px;height:18px;border:none;background:transparent;
-                 color:var(--text3);font-size:11px;cursor:pointer;
-                 display:flex;align-items:center;justify-content:center;
-                 flex-shrink:0;border-radius:4px}
-    .aud-del-btn:active{opacity:.6}
-
-    @keyframes audpulse{from{opacity:1}to{opacity:.35}}
-  `;
-  document.head.appendChild(s);
-})();
-
-// ── Estado global de gravação ──
-let _audRec = null, _audChunks = [], _audItemId = null, _audMarkId = null;
-
-// ── Players ativos (audio elements em memória) ──
-const _audPlayers = {}; // markId → HTMLAudioElement
-
-// ── Insere marcador no cursor dentro do itext ──
-function audioInsert(itemId){
-  const list = getL(); if(!list) return;
-  const item = find(list.items, itemId); if(!item) return;
-
-  const markId = genId();
-  const marker = `⟨🎙${markId}⟩`;
-
-  // Tenta inserir no cursor do contenteditable
-  const el = document.querySelector(`[data-id="${itemId}"] .itext`);
-  if(el && el.isContentEditable){
-    el.focus();
-    const sel = window.getSelection();
-    if(sel && sel.rangeCount){
-      const range = sel.getRangeAt(0);
-      range.deleteContents();
-      const node = document.createTextNode(marker);
-      range.insertNode(node);
-      range.setStartAfter(node);
-      range.collapse(true);
-      sel.removeAllRanges(); sel.addRange(range);
-      item.text = el.innerText;
-    } else {
-      item.text = (item.text||'') + marker;
+          <button class="btn" style="margin-top:0" onclick="closeM();_exportTudo()">
+            🗂️ Exportar tudo (backup completo)
+          </button>
+        </div>`, null);
     }
-  } else {
-    item.text = (item.text||'') + marker;
-  }
-
-  if(!item.audios) item.audios = {};
-  item.audios[markId] = { src: null };
-  save(); renderCnt();
-
-  // Auto-inicia gravação
-  setTimeout(() => audioStartRec(itemId, markId), 100);
-}
-
-// ── Renderiza o texto com chips de áudio inline ──
-function renderRichText(item){
-  if(!item.text) return '';
-  const audios = item.audios || {};
-
-  // Divide nos marcadores ⟨🎙id⟩
-  const parts = item.text.split(/(⟨🎙[a-z0-9]+⟩)/g);
-
-  return parts.map(part => {
-    const m = part.match(/^⟨🎙([a-z0-9]+)⟩$/);
-    if(!m) return esc(part);
-
-    const markId = m[1];
-    const aud    = audios[markId];
-
-    if(aud && aud.src){
-      // Player customizado
-      return `<span class="aud-chip" id="chip-${markId}">
-        <button class="aud-play" id="play-${markId}"
-          onclick="audioPlayPause('${markId}','${item.id}')">▶</button>
-        <span class="aud-bar-wrap" onclick="audioSeek(event,'${markId}')">
-          <div class="aud-bar-fill" id="bar-${markId}"></div>
-        </span>
-        <span class="aud-time" id="time-${markId}">0:00</span>
-        <button class="aud-del-btn" onclick="audioDel('${item.id}','${markId}')">✕</button>
-      </span>`;
-    } else {
-      // Ainda sem áudio — mostra botões gravar/importar
-      const isRec = _audItemId===item.id && _audMarkId===markId && _audRec;
-      return `<span class="aud-chip pending ${isRec?'recording':''}">
-        <button class="aud-rec-btn ${isRec?'on':''}" id="arec-${markId}"
-          onclick="audioToggleRec('${item.id}','${markId}')">
-          ${isRec ? '⏹ Parar' : '🎙 Gravar'}
-        </button>
-        <button class="aud-rec-btn" onclick="audioImport('${item.id}','${markId}')">📎</button>
-        <button class="aud-del-btn" onclick="audioDel('${item.id}','${markId}')">✕</button>
-      </span>`;
+    function _exportLista() {
+      const l = getL(); if (!l) { alert('Nenhuma lista selecionada.'); return; }
+      const dado = { versao: 'lista', lista: l };
+      const b = new Blob([JSON.stringify(dado, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a'); a.href = URL.createObjectURL(b);
+      a.download = (l.name||'lista').replace(/\s+/g,'_') + '.json'; a.click();
     }
-  }).join('');
-}
-
-// ── Player customizado ──
-function audioPlayPause(markId, itemId){
-  // Para todos os outros players
-  Object.entries(_audPlayers).forEach(([id, a]) => {
-    if(id !== markId){
-      a.pause();
-      const b = document.getElementById(`play-${id}`);
-      const c = document.getElementById(`chip-${id}`);
-      if(b) b.textContent = '▶';
-      if(c) c.classList.remove('aud-playing');
+    function _exportTudo() {
+      const b = new Blob([JSON.stringify(S, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a'); a.href = URL.createObjectURL(b);
+      a.download = 'listflow_backup.json'; a.click();
     }
-  });
-
-  // Cria o player se não existir
-  if(!_audPlayers[markId]){
-    const list = getL(); if(!list) return;
-    const item = find(list.items, itemId); if(!item) return;
-    const src  = item.audios?.[markId]?.src; if(!src) return;
-
-    const a = new Audio(src);
-    _audPlayers[markId] = a;
-
-    // Atualiza barra e tempo
-    a.ontimeupdate = () => {
-      const pct = a.duration ? (a.currentTime / a.duration * 100) : 0;
-      const bar = document.getElementById(`bar-${markId}`);
-      const tim = document.getElementById(`time-${markId}`);
-      if(bar) bar.style.width = pct + '%';
-      if(tim) tim.textContent = fmtTime(a.currentTime);
-    };
-    a.onended = () => {
-      const b = document.getElementById(`play-${markId}`);
-      const c = document.getElementById(`chip-${markId}`);
-      const bar = document.getElementById(`bar-${markId}`);
-      if(b) b.textContent = '▶';
-      if(c) c.classList.remove('aud-playing');
-      if(bar) bar.style.width = '0%';
-    };
-  }
-
-  const a   = _audPlayers[markId];
-  const btn = document.getElementById(`play-${markId}`);
-  const chip= document.getElementById(`chip-${markId}`);
-
-  if(a.paused){
-    a.play();
-    if(btn)  btn.textContent = '⏸';
-    if(chip) chip.classList.add('aud-playing');
-  } else {
-    a.pause();
-    if(btn)  btn.textContent = '▶';
-    if(chip) chip.classList.remove('aud-playing');
-  }
-}
-
-function audioSeek(event, markId){
-  const a = _audPlayers[markId]; if(!a || !a.duration) return;
-  const rect = event.currentTarget.getBoundingClientRect();
-  const pct  = (event.clientX - rect.left) / rect.width;
-  a.currentTime = pct * a.duration;
-}
-
-function fmtTime(s){
-  const m = Math.floor(s/60);
-  const sec = Math.floor(s%60);
-  return `${m}:${sec.toString().padStart(2,'0')}`;
-}
-
-// ── Gravação ──
-function audioToggleRec(itemId, markId){
-  if(_audItemId===itemId && _audMarkId===markId && _audRec){
-    _audRec.stop(); return;
-  }
-  if(_audRec){ _audRec.onstop=null; _audRec.stop(); }
-  audioStartRec(itemId, markId);
-}
-
-async function audioStartRec(itemId, markId){
-  try{
-    const stream = await navigator.mediaDevices.getUserMedia({ audio:true });
-    _audChunks=[]; _audItemId=itemId; _audMarkId=markId;
-    const mime = ['audio/webm','audio/mp4','audio/ogg'].find(t=>MediaRecorder.isTypeSupported(t))||'';
-    _audRec = new MediaRecorder(stream, mime?{mimeType:mime}:{});
-    _audRec.ondataavailable = e=>{ if(e.data.size>0) _audChunks.push(e.data); };
-    _audRec.onstop = ()=>{
-      stream.getTracks().forEach(t=>t.stop());
-      const blob = new Blob(_audChunks,{type:_audRec.mimeType||'audio/webm'});
-      const reader = new FileReader();
-      reader.onload = ev=>{
-        const list=getL(); if(!list) return;
-        const item=find(list.items,itemId); if(!item) return;
-        if(!item.audios) item.audios={};
-        if(!item.audios[markId]) item.audios[markId]={};
-        item.audios[markId].src = ev.target.result;
-        _audRec=null; _audItemId=null; _audMarkId=null;
-        save(); renderCnt();
+    function importJ() {
+      openM('⬇ Importar', `
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <button class="btn pri" style="margin-top:0" onclick="closeM();_importLista()">
+            📋 Importar lista individual
+            <div style="font-size:11px;font-weight:400;opacity:.7;margin-top:2px">Adiciona à sua coleção atual</div>
+          </button>
+          <button class="btn" style="margin-top:0" onclick="closeM();_importTudo()">
+            🗂️ Restaurar backup completo
+            <div style="font-size:11px;font-weight:400;opacity:.7;margin-top:2px">Substitui todos os dados</div>
+          </button>
+        </div>`, null);
+    }
+    function _importLista() {
+      const inp = document.createElement('input'); inp.type='file'; inp.accept='.json';
+      inp.onchange = e => {
+        const f = e.target.files[0]; if (!f) return;
+        const r = new FileReader();
+        r.onload = ev => {
+          try {
+            const d = JSON.parse(ev.target.result);
+            if (d.versao === 'lista' && d.lista) {
+              const lista = d.lista; lista.id = genId();
+              S.lists.push(lista); S.active = lista.id; save(); renderAll();
+              alert(`✅ Lista "${lista.name}" importada com sucesso!`);
+            } else if (d.lists) {
+              openM('📋 Importar do backup', `
+                <div class="fg"><div class="fl">Escolha qual lista importar</div>
+                  <select id="impSel" style="font-size:14px">
+                    ${d.lists.map((l,i) => `<option value="${i}">${esc(l.name)} (${l.items?.length||0} itens)</option>`).join('')}
+                  </select>
+                </div>
+                <div style="font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-top:4px">
+                  A lista será adicionada às suas listas atuais.
+                </div>`, () => {
+                const idx = parseInt(document.getElementById('impSel').value);
+                const lista = { ...d.lists[idx], id: genId() };
+                S.lists.push(lista); S.active = lista.id; save(); renderAll();
+                alert(`✅ Lista "${lista.name}" importada!`);
+              });
+            } else { alert('Arquivo não reconhecido.'); }
+          } catch { alert('Arquivo inválido ou corrompido.'); }
+        };
+        r.readAsText(f);
       };
-      reader.readAsDataURL(blob);
+      inp.click();
+    }
+    function _importTudo() {
+      const inp = document.createElement('input'); inp.type='file'; inp.accept='.json';
+      inp.onchange = e => {
+        const f = e.target.files[0]; if (!f) return;
+        const r = new FileReader();
+        r.onload = ev => {
+          try {
+            const d = JSON.parse(ev.target.result);
+            if (d.lists) { S = d; save(); renderAll(); alert('✅ Backup restaurado!'); }
+            else alert('Este arquivo não é um backup completo.');
+          } catch { alert('Arquivo inválido.'); }
+        };
+        r.readAsText(f);
+      };
+      inp.click();
+    }
+
+    function toggleSrchClear(input) { document.getElementById('srchClear')?.classList.toggle('visible', input.value.length > 0); }
+    function clearSearch() { const inp = document.getElementById('si'); if (inp) { inp.value = ''; doSearch(''); } document.getElementById('srchClear')?.classList.remove('visible'); }
+    function toggleSbClear(input) { document.getElementById('sbClear')?.classList.toggle('visible', input.value.length > 0); }
+    function clearSBSearch() { const inp = document.getElementById('sbSearch'); if (inp) { inp.value = ''; filterSB(''); } document.getElementById('sbClear')?.classList.remove('visible'); }
+
+    function confirmarDel(tipo, id) {
+      const l = getL();
+      let nome = '';
+      if (tipo === 'item') {
+        const item = l ? find(l.items, id) : null;
+        nome = item?.text ? `"${item.text.slice(0,40)}${item.text.length>40?'…':''}"` : 'este item';
+      } else {
+        const lista = S.lists.find(l => l.id === id);
+        nome = lista?.name ? `a lista "${lista.name}"` : 'esta lista';
+      }
+      openM(`🗑️ Confirmar exclusão`, `
+        <div style="text-align:center;padding:8px 0;display:flex;flex-direction:column;gap:12px;align-items:center">
+          <div style="font-size:40px">⚠️</div>
+          <div style="font-size:15px;color:var(--text);line-height:1.5">Deseja excluir ${nome}?</div>
+          ${tipo==='lista'?`<div style="font-size:12px;color:var(--text3);font-family:'JetBrains Mono',monospace">Todos os itens dentro da lista serão perdidos.</div>`:''}
+        </div>
+        <div class="macts">
+          <button class="btn" onclick="closeM()">Cancelar</button>
+          <button class="btn" style="background:var(--red);border-color:var(--red);color:white;flex:1;margin-top:11px"
+            onclick="closeM();${tipo==='item'?`delItem('${id}')`:`delL('${id}')`}">🗑️ Excluir</button>
+        </div>`, null);
+    }
+
+    // ══════════════════════════════════════════════════════
+    //  SISTEMA DE PLUGINS DINÂMICOS
+    // ══════════════════════════════════════════════════════
+
+    // Helper global para manter as formatações/tabulações nos textareas
+    window._gpTabFix = function(e) {
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        const start = e.target.selectionStart;
+        const end = e.target.selectionEnd;
+        e.target.value = e.target.value.substring(0, start) + '  ' + e.target.value.substring(end);
+        e.target.selectionStart = e.target.selectionEnd = start + 2;
+      }
     };
-    _audRec.start();
-    // Atualiza visual imediatamente
-    renderCnt();
-  } catch(e){ alert('Microfone inacessível:\n'+e.message); }
-}
 
-function audioImport(itemId, markId){
-  const inp=document.createElement('input'); inp.type='file'; inp.accept='audio/*';
-  inp.onchange=e=>{
-    const file=e.target.files[0]; if(!file) return;
-    const reader=new FileReader();
-    reader.onload=ev=>{
-      const list=getL(); if(!list) return;
-      const item=find(list.items,itemId); if(!item) return;
-      if(!item.audios) item.audios={};
-      if(!item.audios[markId]) item.audios[markId]={};
-      item.audios[markId].src=ev.target.result;
-      save(); renderCnt();
+    // Banco de plugins dinâmicos
+    const _PluginDB = (() => {
+      let db = null;
+      const init = () => new Promise((res, rej) => {
+        if (db) { res(); return; }
+        const req = indexedDB.open('listflow_plugins', 1);
+        req.onupgradeneeded = e => {
+          if (!e.target.result.objectStoreNames.contains('plugins'))
+            e.target.result.createObjectStore('plugins', { keyPath: 'id' });
+        };
+        req.onsuccess = e => { db = e.target.result; res(); };
+        req.onerror = e => rej(e);
+      });
+      return {
+        async salvar(id, codigo, meta) {
+          await init();
+          return new Promise((res, rej) => {
+            const tx = db.transaction('plugins', 'readwrite');
+            tx.objectStore('plugins').put({ id, codigo, meta, ts: Date.now() });
+            tx.oncomplete = res; tx.onerror = rej;
+          });
+        },
+        async listar() {
+          await init();
+          return new Promise((res, rej) => {
+            const tx = db.transaction('plugins', 'readonly');
+            const req = tx.objectStore('plugins').getAll();
+            req.onsuccess = e => res(e.target.result || []);
+            req.onerror = rej;
+          });
+        },
+        async deletar(id) {
+          await init();
+          return new Promise((res, rej) => {
+            const tx = db.transaction('plugins', 'readwrite');
+            tx.objectStore('plugins').delete(id);
+            tx.oncomplete = res; tx.onerror = rej;
+          });
+        }
+      };
+    })();
+
+    // CSS do gerenciador de plugins
+    (()=>{
+      const s = document.createElement('style');
+      s.textContent = `
+        .gp-screen{flex:1;overflow-y:auto;overflow-x:hidden;padding:16px;
+          flex-direction:column;gap:14px;background:var(--bg);box-sizing:border-box;display:none;}
+        .gp-card{background:var(--surface);border:1px solid var(--border);
+          border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:10px;}
+        .gp-card-header{display:flex;align-items:center;gap:10px;}
+        .gp-card-icon{font-size:24px;width:36px;text-align:center;flex-shrink:0;}
+        .gp-card-info{flex:1;min-width:0;}
+        .gp-card-name{font-size:14px;font-weight:700;color:var(--text);}
+        .gp-card-desc{font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-top:2px;}
+        .gp-card-ts{font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace;}
+        .gp-card-acoes{display:flex;gap:6px;flex-wrap:wrap;}
+        .gp-btn{padding:5px 12px;border-radius:8px;border:1px solid var(--border);
+          background:var(--surface2);color:var(--text2);font-size:11px;font-weight:600;
+          font-family:'Syne',sans-serif;cursor:pointer;transition:all .15s;}
+        .gp-btn:active{opacity:.7}
+        .gp-btn.danger{border-color:rgba(232,86,94,.4);color:var(--red);}
+        .gp-btn.success{border-color:rgba(62,207,142,.4);color:var(--green);}
+        .gp-btn.pri{background:var(--accent);border-color:var(--accent);color:white;}
+        .gp-status{font-size:11px;font-family:'JetBrains Mono',monospace;
+          padding:3px 8px;border-radius:20px;}
+        .gp-status.ok{background:rgba(62,207,142,.12);color:var(--green);border:1px solid rgba(62,207,142,.3);}
+        .gp-status.err{background:rgba(232,86,94,.1);color:var(--red);border:1px solid rgba(232,86,94,.3);}
+        .gp-editor{width:100%;background:var(--bg);border:1px solid var(--border);
+          border-radius:8px;color:var(--text);font-family:'JetBrains Mono',monospace;
+          font-size:12px;padding:10px;resize:vertical;min-height:200px;outline:none;
+          line-height:1.7;transition:border-color .2s;white-space:pre;overflow-wrap:normal;overflow-x:auto;}
+        .gp-editor:focus{border-color:var(--accent);}
+        .gp-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;
+          gap:12px;padding:40px;color:var(--text3);text-align:center;}
+        .gp-tabs{display:flex;gap:6px;margin-bottom:4px;}
+        .gp-hint{font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;
+          line-height:1.6;background:var(--surface2);border:1px solid var(--border);
+          border-radius:8px;padding:10px;}
+        .gp-hint b{color:var(--accent);}
+      `;
+      document.head.appendChild(s);
+    })();
+
+    // Executa o plugin como um script global
+    function _executarPluginGlobal(id, codigo) {
+      const old = document.getElementById('plugin-script-' + id);
+      if (old) old.remove(); // Remove a versão antiga se estiver reinstalando
+      const s = document.createElement('script');
+      s.id = 'plugin-script-' + id;
+      s.textContent = codigo;
+      document.body.appendChild(s);
+    }
+
+   // Carrega e executa plugins salvos no IndexedDB
+    async function _pluginsDinamicosCarregar() {
+      try {
+        const lista = await _PluginDB.listar();
+        for (const p of lista) {
+          _executarPluginGlobal(p.id, p.codigo);
+        }
+      } catch(e) {
+        console.error('[Plugin Dinâmico] Erro ao listar plugins:', e);
+      }
+    }
+
+    // Abre tela do gerenciador
+    function abrirGerenciadorPlugins() {
+      const main = document.querySelector('.main');
+      let s = document.getElementById('gpScreen');
+      if (!s) {
+        s = document.createElement('div');
+        s.id = 'gpScreen'; s.className = 'gp-screen';
+        document.querySelector('.body').appendChild(s);
+      }
+      const isOpen = s.style.display === 'flex';
+      if (isOpen) {
+        s.style.display = 'none'; main.style.display = 'flex';
+        return;
+      }
+      main.style.display = 'none'; s.style.display = 'flex';
+      _gpRender();
+    }
+
+    async function _gpRender(aba) {
+      const s = document.getElementById('gpScreen'); if (!s) return;
+      const abaAtual = aba || s.dataset.aba || 'lista';
+      s.dataset.aba = abaAtual;
+
+      let lista = [];
+      try { lista = await _PluginDB.listar(); } catch(e) {}
+
+      const listaHtml = lista.length === 0
+        ? `<div class="gp-empty">
+            <div style="font-size:48px;opacity:.2">🔌</div>
+            <div style="font-size:15px;font-weight:700;color:var(--text2)">Nenhum plugin instalado</div>
+            <div style="font-size:13px">Use a aba "Adicionar" para instalar</div>
+           </div>`
+        : lista.map(p => {
+            const ativo = !!PL[p.id];
+            const data = new Date(p.ts).toLocaleDateString('pt-BR',{day:'2-digit',month:'short',year:'numeric'});
+            return `<div class="gp-card" id="gp-card-${p.id}">
+              <div class="gp-card-header">
+                <div class="gp-card-icon">${p.meta?.icon||'🔌'}</div>
+                <div class="gp-card-info">
+                  <div class="gp-card-name">${esc(p.meta?.name||p.id)}</div>
+                  <div class="gp-card-desc">${esc(p.meta?.desc||'Plugin dinâmico')}</div>
+                  <div class="gp-card-ts">Instalado em ${data}</div>
+                </div>
+                <span class="gp-status ${ativo?'ok':'err'}">${ativo?'✓ Ativo':'✗ Inativo'}</span>
+              </div>
+              <div class="gp-card-acoes">
+                <button class="gp-btn success" onclick="_gpReinstalar('${p.id}')">🔄 Reinstalar</button>
+                <button class="gp-btn" onclick="_gpEditarCodigo('${p.id}')">✏️ Editar</button>
+                <button class="gp-btn danger" onclick="_gpDeletar('${p.id}')">🗑 Remover</button>
+              </div>
+            </div>`;
+          }).join('');
+
+      const adicionarHtml = `
+        <div class="gp-card">
+          <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px">📥 Instalar plugin</div>
+          <div class="gp-tabs">
+            <button class="vtab ${s.dataset.subAba!=='arquivo'?'on':''}" onclick="document.getElementById('gpScreen').dataset.subAba='codigo';_gpRender('adicionar')">✏️ Colar código</button>
+            <button class="vtab ${s.dataset.subAba==='arquivo'?'on':''}" onclick="document.getElementById('gpScreen').dataset.subAba='arquivo';_gpRender('adicionar')">📁 Importar arquivo</button>
+          </div>
+          ${s.dataset.subAba === 'arquivo' ? `
+            <div class="gp-hint">
+              Importe um arquivo <b>.js</b> exportado pelo ListFlow.<br>
+              O arquivo deve conter o código do plugin.
+            </div>
+            <button class="gp-btn pri" style="width:100%;padding:12px;font-size:14px" onclick="_gpImportarArquivo()">
+              📁 Selecionar arquivo .js
+            </button>
+          ` : `
+            <div class="gp-hint">
+              Cole o código do plugin abaixo.<br>
+              Use <b>reg('id', {...})</b> para registrar.<br>
+              A tecla Tab agora funciona para indentação!
+            </div>
+            <textarea class="gp-editor" id="gpCodigo" onkeydown="window._gpTabFix(event)" placeholder="// Cole o código do plugin aqui
+// Exemplo:
+reg('meu-plugin', {
+  name: 'Meu Plugin',
+  icon: '⭐',
+  desc: 'Descrição do plugin',
+  def: false,
+  meta(item) {
+    return item.destaque ? '⭐' : '';
+  }
+});"></textarea>
+            <div style="display:flex;gap:8px;margin-top:4px;">
+              <button class="gp-btn" onclick="document.getElementById('gpCodigo').value=''">🗑 Limpar</button>
+              <button class="gp-btn pri" style="flex:1;padding:10px" onclick="_gpInstalar()">⚡ Instalar plugin</button>
+            </div>
+          `}
+        </div>
+        <div class="gp-card">
+          <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:6px">📦 Backup de Plugins</div>
+          <div style="font-size:12px;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-bottom:8px">
+            Exporte ou importe todos os seus plugins de uma só vez usando um arquivo JSON seguro.
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="gp-btn success" style="flex:1;padding:10px" onclick="_gpExportarTodos()">⬇ Exportar Tudo</button>
+            <button class="gp-btn pri" style="flex:1;padding:10px" onclick="_gpImportarTodos()">⬆ Importar Tudo</button>
+          </div>
+        </div>`;
+
+      s.innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;flex-shrink:0">
+          <div style="font-size:18px;font-weight:800;color:var(--text)">🔌 Plugins Dinâmicos</div>
+          <button onclick="abrirGerenciadorPlugins()"
+            style="padding:6px 14px;border-radius:8px;border:1px solid var(--border);
+            background:var(--surface2);color:var(--text2);font-size:12px;font-weight:600;
+            font-family:'Syne',sans-serif;cursor:pointer;">✕ Fechar</button>
+        </div>
+
+        <div class="gp-tabs">
+          <button class="vtab ${abaAtual==='lista'?'on':''}" onclick="_gpRender('lista')">
+            🔌 Instalados (${lista.length})
+          </button>
+          <button class="vtab ${abaAtual==='adicionar'?'on':''}" onclick="_gpRender('adicionar')">
+            ➕ Adicionar
+          </button>
+        </div>
+
+        ${abaAtual === 'lista' ? listaHtml : adicionarHtml}
+      `;
+    }
+
+    async function _gpInstalar() {
+      const codigo = document.getElementById('gpCodigo')?.value.trim();
+      if (!codigo) { alert('Cole o código do plugin primeiro.'); return; }
+
+      // Extrai metadados do código (name, icon, desc, id)
+      let meta = { name: 'Plugin', icon: '🔌', desc: '' };
+      let pluginId = 'plugin-' + genId();
+
+      // Tenta extrair o id do reg(...)
+      const idMatch = codigo.match(/reg\s*\(\s*['"`]([^'"`]+)['"`]/);
+      if (idMatch) pluginId = idMatch[1];
+
+      // Tenta extrair name, icon, desc
+      const nameMatch = codigo.match(/name\s*:\s*['"`]([^'"`]+)['"`]/);
+      const iconMatch = codigo.match(/icon\s*:\s*['"`]([^'"`]+)['"`]/);
+      const descMatch = codigo.match(/desc\s*:\s*['"`]([^'"`]+)['"`]/);
+      if (nameMatch) meta.name = nameMatch[1];
+      if (iconMatch) meta.icon = iconMatch[1];
+      if (descMatch) meta.desc = descMatch[1];
+
+      // Testa apenas a sintaxe do código antes de salvar
+      try {
+        new Function(codigo);
+      } catch(e) {
+        alert('❌ Erro de sintaxe no código do plugin:\n\n' + e.message);
+        return;
+      }
+
+      // Salva no IndexedDB e injeta globalmente
+      try {
+        await _PluginDB.salvar(pluginId, codigo, meta);
+        _executarPluginGlobal(pluginId, codigo); // Injeta a tag script
+        renderAll();
+        _gpRender('lista');
+        
+        // Pequeno toast de sucesso
+        const t = document.createElement('div');
+        t.textContent = `✅ Plugin "${meta.name}" instalado!`;
+        t.style.cssText = 'position:fixed;top:70px;left:50%;transform:translateX(-50%);background:rgba(62,207,142,.15);border:1px solid rgba(62,207,142,.4);color:var(--green);padding:10px 20px;border-radius:99px;font-family:Syne,sans-serif;font-size:14px;font-weight:700;z-index:9000;white-space:nowrap;';
+        document.body.appendChild(t);
+        setTimeout(() => t.remove(), 2500);
+      } catch(e) {
+        alert('Erro ao salvar plugin: ' + e.message);
+      }
+    }
+
+    function _gpImportarArquivo() {
+      const inp = document.createElement('input');
+      inp.type = 'file'; inp.accept = '.js,.txt';
+      inp.onchange = async e => {
+        const f = e.target.files[0]; if (!f) return;
+        const reader = new FileReader();
+        reader.onload = ev => {
+          // Coloca o código no editor e muda para aba de código
+          const s = document.getElementById('gpScreen');
+          if (s) { s.dataset.subAba = 'codigo'; }
+          _gpRender('adicionar');
+          setTimeout(() => {
+            const editor = document.getElementById('gpCodigo');
+            if (editor) { editor.value = ev.target.result; editor.focus(); }
+          }, 100);
+        };
+        reader.readAsText(f);
+      };
+      inp.click();
+    }
+
+    async function _gpReinstalar(id) {
+      try {
+        const lista = await _PluginDB.listar();
+        const p = lista.find(x => x.id === id);
+        if (!p) return;
+        
+        _executarPluginGlobal(p.id, p.codigo); // Re-injeta a tag script
+        
+        renderAll();
+        _gpRender('lista');
+        toast('🔄 Plugin reinstalado e reiniciado.', 'ok');
+      } catch(e) {
+        alert('Erro ao reinstalar: ' + e.message);
+      }
+    }
+
+    async function _gpEditarCodigo(id) {
+      const lista = await _PluginDB.listar();
+      const p = lista.find(x => x.id === id);
+      if (!p) return;
+      openM(`✏️ Editar — ${esc(p.meta?.name||id)}`, `
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <textarea id="gpEditArea" class="gp-editor" style="min-height:260px" onkeydown="window._gpTabFix(event)">${esc(p.codigo)}</textarea>
+          <div style="display:flex;gap:8px">
+            <button class="btn" style="flex:1" onclick="
+              navigator.clipboard?.writeText(document.getElementById('gpEditArea').value)
+                .then(()=>alert('✅ Copiado!'))
+            ">📋 Copiar</button>
+            <button class="btn pri" style="flex:2" onclick="_gpSalvarEdicao('${id}')">💾 Salvar Alterações</button>
+          </div>
+        </div>
+      `, null);
+    }
+
+    window._gpSalvarEdicao = async function(id) {
+      const codigo = document.getElementById('gpEditArea').value.trim();
+      if(!codigo) return;
+      
+      try {
+        new Function(codigo); // Testa a sintaxe primeiro
+      } catch(e) {
+        alert('❌ Erro de sintaxe no código:\n\n' + e.message);
+        return;
+      }
+      
+      const lista = await _PluginDB.listar();
+      const p = lista.find(x => x.id === id);
+      if(!p) return;
+      
+      p.codigo = codigo;
+      // Atualiza os metadados caso você tenha mudado nome/icone no código
+      const nameMatch = codigo.match(/name\s*:\s*['"`]([^'"`]+)['"`]/);
+      const iconMatch = codigo.match(/icon\s*:\s*['"`]([^'"`]+)['"`]/);
+      const descMatch = codigo.match(/desc\s*:\s*['"`]([^'"`]+)['"`]/);
+      if (nameMatch) p.meta.name = nameMatch[1];
+      if (iconMatch) p.meta.icon = iconMatch[1];
+      if (descMatch) p.meta.desc = descMatch[1];
+
+      await _PluginDB.salvar(id, codigo, p.meta);
+      _executarPluginGlobal(id, codigo);
+      
+      closeM();
+      renderAll();
+      _gpRender('lista');
+      toast('✅ Código atualizado!', 'ok');
     };
-    reader.readAsDataURL(file);
-  };
-  inp.click();
-}
 
-function audioDel(itemId, markId){
-  const list=getL(); if(!list) return;
-  const item=find(list.items,itemId); if(!item) return;
-  // Remove marcador do texto e o dado
-  item.text=(item.text||'').replace(`⟨🎙${markId}⟩`,'').trim();
-  if(item.audios) delete item.audios[markId];
-  if(_audPlayers[markId]){ _audPlayers[markId].pause(); delete _audPlayers[markId]; }
-  save(); renderCnt();
-}
-// ══════════════════════════════════════════════════════
-//  BOOT
-// ══════════════════════════════════════════════════════
-load();
-if(!S._view) S._view='list';
-Object.values(PL).forEach(p=>{ if(p.def&&S.plugins[p.id]===undefined) S.plugins[p.id]=true; });
-if(pon('theme')&&PL.theme?.onToggle) PL.theme.onToggle(true);
+    async function _gpExportarTodos() {
+      const lista = await _PluginDB.listar();
+      if (!lista.length) { alert('Nenhum plugin para exportar.'); return; }
+      
+      const backup = { tipo: 'listflow_plugins_backup', plugins: lista };
+      const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'listflow_plugins_backup_' + new Date().toLocaleDateString('pt-BR').replace(/\//g,'-') + '.json';
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    }
 
-if(!S.lists.length){
-  const d={id:genId(),name:'✨ Bem-vindo ao ListFlow!',items:[],color:'#7c6af7'};
-  d.items=parseT(`- Toque em ☰ para abrir o menu lateral
+    function _gpImportarTodos() {
+      const inp = document.createElement('input');
+      inp.type = 'file'; inp.accept = '.json';
+      inp.onchange = async e => {
+        const f = e.target.files[0]; if (!f) return;
+        const reader = new FileReader();
+        reader.onload = async ev => {
+          try {
+            const d = JSON.parse(ev.target.result);
+            if (d.tipo !== 'listflow_plugins_backup' || !Array.isArray(d.plugins)) {
+              alert('Arquivo de backup de plugins inválido. Certifique-se de usar o botão "Exportar Tudo".');
+              return;
+            }
+            
+            let contador = 0;
+            for(const p of d.plugins) {
+              await _PluginDB.salvar(p.id, p.codigo, p.meta);
+              _executarPluginGlobal(p.id, p.codigo);
+              contador++;
+            }
+            
+            renderAll();
+            _gpRender('lista');
+            alert(`✅ ${contador} plugins restaurados com sucesso!`);
+          } catch(err) {
+            alert('Erro ao ler arquivo: ' + err.message);
+          }
+        };
+        reader.readAsText(f);
+      };
+      inp.click();
+    }
+
+    async function _gpDeletar(id) {
+      const lista = await _PluginDB.listar();
+      const p = lista.find(x => x.id === id);
+      const nome = p?.meta?.name || id;
+      openM('🗑️ Remover plugin', `
+        <div style="text-align:center;padding:8px 0;display:flex;flex-direction:column;gap:12px;align-items:center">
+          <div style="font-size:40px">⚠️</div>
+          <div style="font-size:15px;color:var(--text)">Remover "${esc(nome)}"?</div>
+          <div style="font-size:12px;color:var(--text3);font-family:'JetBrains Mono',monospace">
+            O plugin será removido do IndexedDB.<br>Você pode reinstalar a qualquer momento.
+          </div>
+        </div>
+        <div class="macts">
+          <button class="btn" onclick="closeM()">Cancelar</button>
+          <button class="btn" style="background:var(--red);border-color:var(--red);color:white;flex:1;margin-top:11px"
+            onclick="closeM();_gpDeletarConfirmar('${id}')">🗑️ Remover</button>
+        </div>
+      `, null);
+    }
+
+    async function _gpDeletarConfirmar(id) {
+      await _PluginDB.deletar(id);
+      // Remove do PL em memória
+      delete PL[id];
+      delete S.plugins[id];
+      save();
+      renderAll();
+      _gpRender('lista');
+    }
+    
+    // ══════════════════════════════════════════════════════
+    //  BOOT
+    // ══════════════════════════════════════════════════════
+    load();
+    // Carrega plugins dinâmicos do IndexedDB ANTES de inicializar
+    _pluginsDinamicosCarregar().then(() => {
+      Object.values(PL).forEach(p => { if (p.onInit) p.onInit(); });
+      if (!S._view) S._view = 'list';
+      Object.values(PL).forEach(p => { if (p.def && S.plugins[p.id] === undefined) S.plugins[p.id] = true; });
+      Object.values(PL).forEach(p => { if (pon(p.id) && p.onToggle) p.onToggle(true); });
+      if (pon('theme') && PL.theme?.onToggle) PL.theme.onToggle(true);
+      if (!S.lists.length) {
+        const d = { id: genId(), name: '✨ Bem-vindo ao ListFlow!', items: [], color: '#7c6af7' };
+        d.items = parseT(`- Toque em ☰ para abrir o menu lateral
 - Ative plugins no menu lateral
   - Cada plugin adiciona funcionalidades
   - Experimente Tags, Prazo, Kanban...
@@ -1790,9 +1580,17 @@ if(!S.lists.length){
 - Importe listas pela área de texto
 - Tab para indentar (teclado físico)
 - Toque em "Como criar um plugin" no rodapé do menu`);
-  S.lists.push(d); S.active=d.id; save();
-}
-renderAll();
-</script>
+        S.lists.push(d); S.active = d.id; save();
+      }
+      renderAll();
+    });
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(reg => console.log('[SW] OK:', reg.scope))
+          .catch(err => console.error('[SW] Erro:', err));
+      });
+    }
+  </script>
 </body>
 </html>
