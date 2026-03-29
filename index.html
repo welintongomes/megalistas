@@ -472,66 +472,7 @@
     //  PLUGINS EXISTENTES
     // ══════════════════════════════════════════════════════
 
-    reg('progress', {
-      name: 'Barra de Progresso', icon: '📊', desc: 'Mostra % de conclusão da lista', def: true,
-      hdr(list) {
-        const { d, t } = cp(list.items); const p = t ? Math.round(d / t * 100) : 0;
-        return `<div class="prog"><div class="pgbg"><div class="pgfill" style="width:${p}%"></div></div><div class="pglabel">${d} de ${t} concluídos — ${p}%</div></div>`;
-      }
-    });
 
-    reg('tags', {
-      name: 'Tags coloridas', icon: '🏷️', desc: 'Etiquetas coloridas nos itens', def: false,
-      tb() { return `<button class="tbbtn" onclick="openTagM()">🏷️ Tag</button>`; },
-      meta(item) {
-        if (!item.tags?.length) return '';
-        const cm = { red: 'tred', orange: 'toran', yellow: 'tyel', green: 'tgrn', blue: 'tblu', purple: 'tpur', pink: 'tpnk' };
-        return item.tags.map(t => `<span class="tag ${cm[t.color] || 'tblu'}" onclick="rmTag('${item.id}','${esc(t.label)}')">${esc(t.label)} ✕</span>`).join('');
-      }
-    });
-
-    reg('duedate', {
-      name: 'Prazo', icon: '📅', desc: 'Data limite nos itens', def: false,
-      abtn(item) { return `<button class="iabtn" onclick="setDue('${item.id}')">📅</button>`; },
-      meta(item) {
-        if (!item.due) return '';
-        const d = new Date(item.due + 'T12:00:00'), t = new Date(); t.setHours(0, 0, 0, 0);
-        const df = Math.round((d - t) / 86400000);
-        const cls = df < 0 ? 'dover' : df <= 2 ? 'dsoon' : 'dnorm';
-        const lb = df < 0 ? `Atrasado ${Math.abs(df)}d` : df === 0 ? 'Hoje' : df === 1 ? 'Amanhã' : d.toLocaleDateString('pt-BR');
-        return `<span class="due ${cls}" onclick="setDue('${item.id}')">📅 ${lb}</span>`;
-      }
-    });
-
-    reg('priority', {
-      name: 'Prioridade', icon: '🔥', desc: 'Alta / Média / Baixa por item', def: false,
-      pfx(item) {
-        const m = { high: '🔴', mid: '🟡', low: '🟢', none: '·' };
-        return `<span class="pribadge" title="Prioridade: ${item.priority || 'none'}" onclick="cycP('${item.id}')">${m[item.priority || 'none']}</span>`;
-      }
-    });
-
-    reg('search', {
-      name: 'Busca', icon: '🔍', desc: 'Filtra itens em tempo real', def: true,
-      tb() { return `<div class="srch"><span class="sicon">🔍</span><input placeholder="Buscar..." oninput="doSearch(this.value);toggleSrchClear(this)" id="si"><button class="srch-clear" id="srchClear" onclick="clearSearch()" title="Limpar">✕</button></div>`; }
-    });
-
-    reg('notes', {
-      name: 'Notas nos itens', icon: '📝', desc: 'Nota de texto livre por item', def: false,
-      abtn(item) { return `<button class="iabtn" onclick="togNote('${item.id}')">📝</button>`; },
-      extra(item) {
-        if (!item.note && !item._sn) return '';
-        return `<div class="inote" contenteditable="true" onblur="svNote('${item.id}',this.innerText)">${esc(item.note || '')}</div>`;
-      }
-    });
-
-    reg('estimate', {
-      name: 'Estimativa de Tempo', icon: '⏱️', desc: 'Tempo estimado por item', def: false,
-      abtn(item) { return `<button class="iabtn" onclick="setEst('${item.id}')">⏱️</button>`; },
-      meta(item) { return item.estimate ? `<span class="estbadge">⏱ ${esc(item.estimate)}</span>` : ''; }
-    });
-
-    reg('celebrate', { name: 'Celebração 🎉', icon: '🎉', desc: 'Confete ao completar toda a lista', def: false });
 
     reg('theme', {
       name: 'Tema Claro', icon: '☀️', desc: 'Alterna entre escuro e claro', def: false,
@@ -1103,7 +1044,7 @@ await MeuDB.deletar('meu-id');</pre>
     }
 
     // ══════════════════════════════════════════════════════
-    //  SISTEMA DE PLUGINS DINÂMICOS
+    //  SISTEMA DE PLUGINS DINÂMICOS - MODO "ZERO OVERHEAD"
     // ══════════════════════════════════════════════════════
 
     // Helper global para manter as formatações/tabulações nos textareas
@@ -1184,7 +1125,7 @@ await MeuDB.deletar('meu-id');</pre>
         .gp-status{font-size:11px;font-family:'JetBrains Mono',monospace;
           padding:3px 8px;border-radius:20px;}
         .gp-status.ok{background:rgba(62,207,142,.12);color:var(--green);border:1px solid rgba(62,207,142,.3);}
-        .gp-status.err{background:rgba(232,86,94,.1);color:var(--red);border:1px solid rgba(232,86,94,.3);}
+        .gp-status.err{background:rgba(232,200,74,.1);color:var(--orange);border:1px solid rgba(232,200,74,.3);}
         .gp-editor{width:100%;background:var(--bg);border:1px solid var(--border);
           border-radius:8px;color:var(--text);font-family:'JetBrains Mono',monospace;
           font-size:12px;padding:10px;resize:vertical;min-height:200px;outline:none;
@@ -1204,24 +1145,64 @@ await MeuDB.deletar('meu-id');</pre>
     // Executa o plugin como um script global
     function _executarPluginGlobal(id, codigo) {
       const old = document.getElementById('plugin-script-' + id);
-      if (old) old.remove(); // Remove a versão antiga se estiver reinstalando
+      if (old) old.remove();
       const s = document.createElement('script');
       s.id = 'plugin-script-' + id;
       s.textContent = codigo;
       document.body.appendChild(s);
     }
 
-   // Carrega e executa plugins salvos no IndexedDB
+   // Carrega dinamicamente os plugins APENAS se estiverem "Ativos"
     async function _pluginsDinamicosCarregar() {
       try {
         const lista = await _PluginDB.listar();
         for (const p of lista) {
-          _executarPluginGlobal(p.id, p.codigo);
+          if (p.meta?.ativo !== false) {
+            _executarPluginGlobal(p.id, p.codigo);
+          }
         }
       } catch(e) {
         console.error('[Plugin Dinâmico] Erro ao listar plugins:', e);
       }
     }
+
+    // Gerenciador de "Ligar e Desligar" real do Plugin (Zero Overhead)
+    window._gpToggleAtivo = async function(id, ativar) {
+      const lista = await _PluginDB.listar();
+      const p = lista.find(x => x.id === id);
+      if (!p) return;
+
+      if (!p.meta) p.meta = {};
+      p.meta.ativo = ativar;
+      await _PluginDB.salvar(p.id, p.codigo, p.meta);
+
+      if (ativar) {
+        _executarPluginGlobal(p.id, p.codigo);
+        setTimeout(() => {
+          if (PL[id] && S.plugins[id] === undefined) { S.plugins[id] = true; save(); }
+          renderAll();
+          _gpRender('lista');
+          toast('✅ Plugin iniciado!', 'ok');
+        }, 50);
+      } else {
+        // Limpeza profunda para liberar RAM e sumir com o plugin do mapa
+        document.getElementById('plugin-script-' + p.id)?.remove(); // Remove tag script
+        document.getElementById('css-' + p.id)?.remove(); // Remove CSS do plugin se tiver
+        document.getElementById(p.id + 'Screen')?.remove(); // Fecha tela extra se tiver
+        document.getElementById(p.id + 'Btn')?.remove(); // Remove botão superior
+
+        if (PL[p.id] && PL[p.id].onToggle && S.plugins[p.id]) {
+          try { PL[p.id].onToggle(false); } catch(e){}
+        }
+
+        delete PL[p.id]; // Exclui registro do núcleo
+        delete S.plugins[p.id]; // Exclui da memória de salvamento
+        save();
+        renderAll(); // Força recarregar interface inteira sem o plugin
+        _gpRender('lista');
+        toast('⏸ Plugin pausado (Memória liberada)', 'aviso');
+      }
+    };
 
     // Abre tela do gerenciador
     function abrirGerenciadorPlugins() {
@@ -1256,7 +1237,7 @@ await MeuDB.deletar('meu-id');</pre>
             <div style="font-size:13px">Use a aba "Adicionar" para instalar</div>
            </div>`
         : lista.map(p => {
-            const ativo = !!PL[p.id];
+            const isAtivo = p.meta?.ativo !== false;
             const data = new Date(p.ts).toLocaleDateString('pt-BR',{day:'2-digit',month:'short',year:'numeric'});
             return `<div class="gp-card" id="gp-card-${p.id}">
               <div class="gp-card-header">
@@ -1266,10 +1247,13 @@ await MeuDB.deletar('meu-id');</pre>
                   <div class="gp-card-desc">${esc(p.meta?.desc||'Plugin dinâmico')}</div>
                   <div class="gp-card-ts">Instalado em ${data}</div>
                 </div>
-                <span class="gp-status ${ativo?'ok':'err'}">${ativo?'✓ Ativo':'✗ Inativo'}</span>
+                <span class="gp-status ${isAtivo?'ok':'err'}">${isAtivo?'✓ Rodando':'⏸ Pausado'}</span>
               </div>
               <div class="gp-card-acoes">
-                <button class="gp-btn success" onclick="_gpReinstalar('${p.id}')">🔄 Reinstalar</button>
+                ${isAtivo
+                  ? `<button class="gp-btn" style="color:var(--orange);border-color:rgba(240,128,75,.4)" onclick="_gpToggleAtivo('${p.id}', false)">⏸ Pausar</button>`
+                  : `<button class="gp-btn success" onclick="_gpToggleAtivo('${p.id}', true)">▶️ Iniciar</button>`
+                }
                 <button class="gp-btn" onclick="_gpEditarCodigo('${p.id}')">✏️ Editar</button>
                 <button class="gp-btn danger" onclick="_gpDeletar('${p.id}')">🗑 Remover</button>
               </div>
@@ -1351,15 +1335,13 @@ reg('meu-plugin', {
       const codigo = document.getElementById('gpCodigo')?.value.trim();
       if (!codigo) { alert('Cole o código do plugin primeiro.'); return; }
 
-      // Extrai metadados do código (name, icon, desc, id)
-      let meta = { name: 'Plugin', icon: '🔌', desc: '' };
+      // Extrai metadados do código e FORÇA start 'ativo'
+      let meta = { name: 'Plugin', icon: '🔌', desc: '', ativo: true };
       let pluginId = 'plugin-' + genId();
 
-      // Tenta extrair o id do reg(...)
       const idMatch = codigo.match(/reg\s*\(\s*['"`]([^'"`]+)['"`]/);
       if (idMatch) pluginId = idMatch[1];
 
-      // Tenta extrair name, icon, desc
       const nameMatch = codigo.match(/name\s*:\s*['"`]([^'"`]+)['"`]/);
       const iconMatch = codigo.match(/icon\s*:\s*['"`]([^'"`]+)['"`]/);
       const descMatch = codigo.match(/desc\s*:\s*['"`]([^'"`]+)['"`]/);
@@ -1367,7 +1349,6 @@ reg('meu-plugin', {
       if (iconMatch) meta.icon = iconMatch[1];
       if (descMatch) meta.desc = descMatch[1];
 
-      // Testa apenas a sintaxe do código antes de salvar
       try {
         new Function(codigo);
       } catch(e) {
@@ -1375,14 +1356,12 @@ reg('meu-plugin', {
         return;
       }
 
-      // Salva no IndexedDB e injeta globalmente
       try {
         await _PluginDB.salvar(pluginId, codigo, meta);
-        _executarPluginGlobal(pluginId, codigo); // Injeta a tag script
+        _executarPluginGlobal(pluginId, codigo);
         renderAll();
         _gpRender('lista');
         
-        // Pequeno toast de sucesso
         const t = document.createElement('div');
         t.textContent = `✅ Plugin "${meta.name}" instalado!`;
         t.style.cssText = 'position:fixed;top:70px;left:50%;transform:translateX(-50%);background:rgba(62,207,142,.15);border:1px solid rgba(62,207,142,.4);color:var(--green);padding:10px 20px;border-radius:99px;font-family:Syne,sans-serif;font-size:14px;font-weight:700;z-index:9000;white-space:nowrap;';
@@ -1400,7 +1379,6 @@ reg('meu-plugin', {
         const f = e.target.files[0]; if (!f) return;
         const reader = new FileReader();
         reader.onload = ev => {
-          // Coloca o código no editor e muda para aba de código
           const s = document.getElementById('gpScreen');
           if (s) { s.dataset.subAba = 'codigo'; }
           _gpRender('adicionar');
@@ -1412,22 +1390,6 @@ reg('meu-plugin', {
         reader.readAsText(f);
       };
       inp.click();
-    }
-
-    async function _gpReinstalar(id) {
-      try {
-        const lista = await _PluginDB.listar();
-        const p = lista.find(x => x.id === id);
-        if (!p) return;
-        
-        _executarPluginGlobal(p.id, p.codigo); // Re-injeta a tag script
-        
-        renderAll();
-        _gpRender('lista');
-        toast('🔄 Plugin reinstalado e reiniciado.', 'ok');
-      } catch(e) {
-        alert('Erro ao reinstalar: ' + e.message);
-      }
     }
 
     async function _gpEditarCodigo(id) {
@@ -1453,7 +1415,7 @@ reg('meu-plugin', {
       if(!codigo) return;
       
       try {
-        new Function(codigo); // Testa a sintaxe primeiro
+        new Function(codigo);
       } catch(e) {
         alert('❌ Erro de sintaxe no código:\n\n' + e.message);
         return;
@@ -1464,7 +1426,6 @@ reg('meu-plugin', {
       if(!p) return;
       
       p.codigo = codigo;
-      // Atualiza os metadados caso você tenha mudado nome/icone no código
       const nameMatch = codigo.match(/name\s*:\s*['"`]([^'"`]+)['"`]/);
       const iconMatch = codigo.match(/icon\s*:\s*['"`]([^'"`]+)['"`]/);
       const descMatch = codigo.match(/desc\s*:\s*['"`]([^'"`]+)['"`]/);
@@ -1472,13 +1433,15 @@ reg('meu-plugin', {
       if (iconMatch) p.meta.icon = iconMatch[1];
       if (descMatch) p.meta.desc = descMatch[1];
 
+      // Quando edita, força rodar automaticamente
+      p.meta.ativo = true; 
       await _PluginDB.salvar(id, codigo, p.meta);
       _executarPluginGlobal(id, codigo);
       
       closeM();
       renderAll();
       _gpRender('lista');
-      toast('✅ Código atualizado!', 'ok');
+      toast('✅ Código atualizado e recarregado!', 'ok');
     };
 
     async function _gpExportarTodos() {
@@ -1511,7 +1474,10 @@ reg('meu-plugin', {
             let contador = 0;
             for(const p of d.plugins) {
               await _PluginDB.salvar(p.id, p.codigo, p.meta);
-              _executarPluginGlobal(p.id, p.codigo);
+              // Injeta apenas os que foram exportados como "rodando"
+              if (p.meta?.ativo !== false) {
+                _executarPluginGlobal(p.id, p.codigo);
+              }
               contador++;
             }
             
@@ -1536,7 +1502,7 @@ reg('meu-plugin', {
           <div style="font-size:40px">⚠️</div>
           <div style="font-size:15px;color:var(--text)">Remover "${esc(nome)}"?</div>
           <div style="font-size:12px;color:var(--text3);font-family:'JetBrains Mono',monospace">
-            O plugin será removido do IndexedDB.<br>Você pode reinstalar a qualquer momento.
+            O plugin será removido permanentemente.<br>Use o backup se quiser salvar antes.
           </div>
         </div>
         <div class="macts">
@@ -1548,8 +1514,14 @@ reg('meu-plugin', {
     }
 
     async function _gpDeletarConfirmar(id) {
+      // Força a limpeza do DOM se estiver rodando
+      document.getElementById('plugin-script-' + id)?.remove();
+      document.getElementById('css-' + id)?.remove();
+      document.getElementById(id + 'Screen')?.remove();
+      document.getElementById(id + 'Btn')?.remove();
+      
       await _PluginDB.deletar(id);
-      // Remove do PL em memória
+      
       delete PL[id];
       delete S.plugins[id];
       save();
