@@ -1104,8 +1104,8 @@ await MeuDB.deletar('meu-id');</pre>
     (()=>{
       const s = document.createElement('style');
       s.textContent = `
-        .gp-screen{flex:1;overflow-y:auto;overflow-x:hidden;padding:16px;
-          flex-direction:column;gap:14px;background:var(--bg);box-sizing:border-box;display:none;}
+        .gp-screen{z-index: 31;flex:1;overflow-y:auto;overflow-x:hidden;padding:16px;
+          flex-direction: column-reverse;gap:14px;background:var(--bg);box-sizing:border-box;display:none;}
         .gp-card{background:var(--surface);border:1px solid var(--border);
           border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:10px;}
         .gp-card-header{display:flex;align-items:center;gap:10px;}
@@ -1133,7 +1133,7 @@ await MeuDB.deletar('meu-id');</pre>
         .gp-editor:focus{border-color:var(--accent);}
         .gp-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;
           gap:12px;padding:40px;color:var(--text3);text-align:center;}
-        .gp-tabs{display:flex;gap:6px;margin-bottom:4px;}
+        .gp-tabs{display:flex;gap:6px;margin-bottom:4px;justify-content: center;}
         .gp-hint{font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;
           line-height:1.6;background:var(--surface2);border:1px solid var(--border);
           border-radius:8px;padding:10px;}
@@ -1222,6 +1222,14 @@ await MeuDB.deletar('meu-id');</pre>
       _gpRender();
     }
 
+    function _gpFiltrar(q) {
+  const qu = (q || '').toLowerCase().trim();
+  document.querySelectorAll('#gpScreen .gp-card[data-plugin-id]').forEach(card => {
+    const nome = card.querySelector('.gp-card-name')?.textContent?.toLowerCase() || '';
+    const desc = card.querySelector('.gp-card-desc')?.textContent?.toLowerCase() || '';
+    card.style.display = (!qu || nome.includes(qu) || desc.includes(qu)) ? '' : 'none';
+  });
+}
     async function _gpRender(aba) {
       const s = document.getElementById('gpScreen'); if (!s) return;
       const abaAtual = aba || s.dataset.aba || 'lista';
@@ -1239,7 +1247,7 @@ await MeuDB.deletar('meu-id');</pre>
         : lista.map(p => {
             const isAtivo = p.meta?.ativo !== false;
             const data = new Date(p.ts).toLocaleDateString('pt-BR',{day:'2-digit',month:'short',year:'numeric'});
-            return `<div class="gp-card" id="gp-card-${p.id}">
+            return `<div class="gp-card" id="gp-card-${p.id}" data-plugin-id="${p.id}">
               <div class="gp-card-header">
                 <div class="gp-card-icon">${p.meta?.icon||'🔌'}</div>
                 <div class="gp-card-info">
@@ -1310,10 +1318,10 @@ reg('meu-plugin', {
         </div>`;
 
       s.innerHTML = `
-        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;flex-shrink:0">
+        <div style="flex-direction: row-reverse;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;flex-shrink:0">
           <div style="font-size:18px;font-weight:800;color:var(--text)">🔌 Plugins Dinâmicos</div>
           <button onclick="abrirGerenciadorPlugins()"
-            style="padding:6px 14px;border-radius:8px;border:1px solid var(--border);
+            style="padding: 7px 35px;border-radius:8px;border:1px solid var(--border);
             background:var(--surface2);color:var(--text2);font-size:12px;font-weight:600;
             font-family:'Syne',sans-serif;cursor:pointer;">✕ Fechar</button>
         </div>
@@ -1327,7 +1335,23 @@ reg('meu-plugin', {
           </button>
         </div>
 
-        ${abaAtual === 'lista' ? listaHtml : adicionarHtml}
+            ${abaAtual === 'lista' ? `
+      <input
+        type="text"
+        placeholder="🔍 Buscar plugin..."
+        oninput="_gpFiltrar(this.value)"
+        style="width:100%;background:var(--surface2);border:1px solid var(--border);
+          border-radius:var(--r);color:var(--text);font-family:'Syne',sans-serif;
+          font-size:13px;padding:8px 12px;outline:none;transition:border-color .2s;box-sizing:border-box;"
+        onfocus="this.style.borderColor='var(--accent)'"
+        onblur="this.style.borderColor='var(--border)'"
+      >
+    ` : ''}
+  </div>
+
+  <div style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:14px;padding-top:10px">
+    ${abaAtual === 'lista' ? listaHtml : adicionarHtml}
+    </div>
       `;
     }
 
