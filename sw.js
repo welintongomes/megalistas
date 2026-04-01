@@ -1,4 +1,4 @@
-const CACHE = 'listflow-v2';
+const CACHE = 'listflow-v3';
 
 // Tudo que o app precisa para funcionar offline
 const ASSETS = [
